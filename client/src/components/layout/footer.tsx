@@ -59,33 +59,51 @@ export default function Footer() {
             <h3 className="font-montserrat font-semibold text-lg mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Home</a>
+                <Link 
+                  href="/"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Home
                 </Link>
               </li>
               <li>
-                <Link href="/about">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Sobre Nós</a>
+                <Link 
+                  href="/about"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Sobre Nós
                 </Link>
               </li>
               <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Serviços</a>
+                <Link 
+                  href="/services"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Serviços
                 </Link>
               </li>
               <li>
-                <Link href="/events-public">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Eventos</a>
+                <Link 
+                  href="/events-public"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Eventos
                 </Link>
               </li>
               <li>
-                <Link href="/blog">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Blog</a>
+                <Link 
+                  href="/blog"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Blog
                 </Link>
               </li>
               <li>
-                <Link href="/contact">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Contato</a>
+                <Link 
+                  href="/contact"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Contato
                 </Link>
               </li>
             </ul>
@@ -95,28 +113,43 @@ export default function Footer() {
             <h3 className="font-montserrat font-semibold text-lg mb-4">Associados</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/auth">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Login</a>
+                <Link 
+                  href="/auth"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Login
                 </Link>
               </li>
               <li>
-                <Link href="/#associe-se">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Associe-se</a>
+                <Link 
+                  href="/#associe-se"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Associe-se
                 </Link>
               </li>
               <li>
-                <Link href="/library">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Biblioteca</a>
+                <Link 
+                  href="/library"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Biblioteca
                 </Link>
               </li>
               <li>
-                <Link href="/certificates">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Certificados</a>
+                <Link 
+                  href="/certificates"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Certificados
                 </Link>
               </li>
               <li>
-                <Link href="/benefits">
-                  <a className="text-gray-300 hover:text-primary transition duration-300">Convênios</a>
+                <Link 
+                  href="/benefits"
+                  className="text-gray-300 hover:text-primary transition duration-300"
+                >
+                  Convênios
                 </Link>
               </li>
             </ul>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 import {
   Form,
   FormControl,
@@ -440,8 +441,8 @@ export default function SignupSection() {
                             htmlFor="terms" 
                             className="text-sm text-gray-600 font-normal"
                           >
-                            Concordo com os <a href="#" className="text-primary hover:underline">termos de uso</a> e{" "}
-                            <a href="#" className="text-primary hover:underline">política de privacidade</a>.
+                            Concordo com os <Link href="/terms" className="text-primary hover:underline">termos de uso</Link> e{" "}
+                            <Link href="/privacy" className="text-primary hover:underline">política de privacidade</Link>.
                           </FormLabel>
                           <FormMessage />
                         </div>
