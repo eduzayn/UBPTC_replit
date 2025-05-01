@@ -36,7 +36,11 @@ const loginSchema = z.object({
   }),
 });
 
+// Admin login form schema - mesmo schema que login regular
+const adminLoginSchema = loginSchema;
+
 type LoginFormValues = z.infer<typeof loginSchema>;
+type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
 // Register form schema
 const registerSchema = z.object({
@@ -68,7 +72,7 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "register" | "admin">("login");
   const [location, navigate] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
 
@@ -82,6 +86,15 @@ export default function AuthPage() {
   // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+  
+  // Admin login form
+  const adminLoginForm = useForm<AdminLoginFormValues>({
+    resolver: zodResolver(adminLoginSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -105,6 +118,13 @@ export default function AuthPage() {
 
   const onLoginSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(data);
+  };
+  
+  const onAdminLoginSubmit = (data: AdminLoginFormValues) => {
+    loginMutation.mutate({
+      ...data,
+      isAdmin: true
+    });
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
@@ -198,9 +218,10 @@ export default function AuthPage() {
                 </CardDescription>
               </CardHeader>
               
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register")}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">Login</TabsTrigger>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register" | "admin")}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="login">Login Membro</TabsTrigger>
+                  <TabsTrigger value="admin">Login Admin</TabsTrigger>
                   <TabsTrigger value="register">Cadastre-se</TabsTrigger>
                 </TabsList>
                 
@@ -261,6 +282,53 @@ export default function AuthPage() {
                       </Button>
                     </p>
                   </CardFooter>
+                </TabsContent>
+                
+                <TabsContent value="admin">
+                  <CardContent>
+                    <Form {...adminLoginForm}>
+                      <form onSubmit={adminLoginForm.handleSubmit(onAdminLoginSubmit)} className="space-y-4">
+                        <FormField
+                          control={adminLoginForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>E-mail administrativo</FormLabel>
+                              <FormControl>
+                                <Input placeholder="admin@ubpct.org" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={adminLoginForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Senha</FormLabel>
+                              <FormControl>
+                                <Input type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-slate-700 hover:bg-slate-800"
+                          disabled={loginMutation.isPending}
+                        >
+                          {loginMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Acesso Administrativo
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
                 </TabsContent>
                 
                 <TabsContent value="register">
