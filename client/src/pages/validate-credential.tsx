@@ -27,6 +27,11 @@ export default function ValidateCredentialPage() {
   
   const { data, isLoading, error } = useQuery<ValidationResult>({
     queryKey: [`/api/validate/${credentialId}`],
+    queryFn: async () => {
+      const res = await fetch(`/api/validate/${credentialId}`);
+      if (!res.ok) throw new Error("Falha ao validar credencial");
+      return res.json();
+    },
     retry: false,
   });
 

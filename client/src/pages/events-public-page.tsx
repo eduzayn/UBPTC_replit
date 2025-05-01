@@ -27,18 +27,10 @@ export default function EventsPublicPage() {
   };
 
   const renderEventDate = (event: Event) => {
-    if (!event.start_date || !event.end_date) return "Data a definir";
+    if (!event.event_date) return "Data a definir";
     
-    const start = new Date(event.start_date);
-    const end = new Date(event.end_date);
-    
-    // Se é no mesmo dia
-    if (start.toDateString() === end.toDateString()) {
-      return `${formatDate(start, "dd 'de' MMMM 'de' yyyy")}`;
-    }
-    
-    // Se é em dias diferentes
-    return `${formatDate(start, "dd 'de' MMMM")} a ${formatDate(end, "dd 'de' MMMM 'de' yyyy")}`;
+    const eventDate = new Date(event.event_date);
+    return formatDate(eventDate, "dd 'de' MMMM 'de' yyyy");
   };
 
   return (
@@ -92,10 +84,10 @@ export default function EventsPublicPage() {
                         <span>{renderEventDate(event)}</span>
                       </div>
                       
-                      {event.time && (
+                      {event.start_time && (
                         <div className="flex items-center text-gray-700">
                           <Clock className="h-4 w-4 mr-2" />
-                          <span>{event.time}</span>
+                          <span>{event.start_time} - {event.end_time || "A definir"}</span>
                         </div>
                       )}
                       
