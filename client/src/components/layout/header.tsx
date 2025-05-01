@@ -186,13 +186,13 @@ export default function Header() {
                     {/* Member Links */}
                     <div className="space-y-3 pt-2">
                       {memberLinks.map((link) => (
-                        <Link key={link.path} href={link.path}>
-                          <a
-                            className="block text-gray-700 hover:text-primary"
-                            onClick={() => setIsOpen(false)}
-                          >
-                            {link.name}
-                          </a>
+                        <Link 
+                          key={link.path} 
+                          href={link.path}
+                          className="block text-gray-700 hover:text-primary"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {link.name}
                         </Link>
                       ))}
                     </div>
@@ -205,13 +205,13 @@ export default function Header() {
                         </div>
                         <div className="space-y-3">
                           {adminLinks.map((link) => (
-                            <Link key={link.path} href={link.path}>
-                              <a
-                                className="block text-gray-700 hover:text-primary"
-                                onClick={() => setIsOpen(false)}
-                              >
-                                {link.name}
-                              </a>
+                            <Link 
+                              key={link.path} 
+                              href={link.path}
+                              className="block text-gray-700 hover:text-primary"
+                              onClick={() => setIsOpen(false)}
+                            >
+                              {link.name}
                             </Link>
                           ))}
                         </div>
@@ -231,13 +231,12 @@ export default function Header() {
                     </Button>
                   </>
                 ) : (
-                  <Link href="/auth">
-                    <a
-                      className="font-montserrat text-gray-700 hover:text-primary"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Login
-                    </a>
+                  <Link 
+                    href="/auth"
+                    className="font-montserrat text-gray-700 hover:text-primary"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
                   </Link>
                 )}
               </div>

@@ -112,8 +112,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+  
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    // Create mock mutations for components outside of AuthProvider
+    // This allows components like SignupSection to be rendered without errors
+    const { toast } = useToast();
+    
+    const registerMutation = useMutation({
+      mutationFn: async (userData: InsertUser) => {
+        const res = await apiRequest("POST", "/api/register", userData);
+        return await res.json();
+      },
+      onSuccess: (user: User) => {
+        queryClient.setQueryData(["/api/user"], user);
+        toast({
+          title: "Cadastro realizado com sucesso",
+          description: "Sua conta foi criada com sucesso!",
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Falha no cadastro",
+          description: error.message || "Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      },
+    });
+
+    const loginMutation = useMutation({
+      mutationFn: async (credentials: LoginData) => {
+        const res = await apiRequest("POST", "/api/login", credentials);
+        return await res.json();
+      },
+      onSuccess: (user: User) => {
+        queryClient.setQueryData(["/api/user"], user);
+      },
+      onError: (error: Error) => {
+        console.error("Login error:", error);
+      },
+    });
+
+    const logoutMutation = useMutation({
+      mutationFn: async () => {
+        await apiRequest("POST", "/api/logout");
+      },
+      onSuccess: () => {
+        queryClient.setQueryData(["/api/user"], null);
+      },
+      onError: (error: Error) => {
+        console.error("Logout error:", error);
+      },
+    });
+
+    return {
+      user: null,
+      isLoading: false,
+      error: null,
+      loginMutation,
+      logoutMutation,
+      registerMutation,
+    };
   }
+  
   return context;
 }
