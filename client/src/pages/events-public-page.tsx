@@ -65,15 +65,10 @@ export default function EventsPublicPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {events.slice(0, visibleEvents).map((event) => (
                 <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  {event.image_url && (
-                    <div className="h-48 overflow-hidden">
-                      <img 
-                        src={event.image_url} 
-                        alt={event.title} 
-                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
+                  {/* Placeholder para imagem - será implementado no schema futuramente */}
+                  <div className="h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
+                    <Calendar className="h-16 w-16 text-gray-400" />
+                  </div>
                   <CardContent className="p-6">
                     <h2 className="text-2xl font-semibold mb-3">{event.title}</h2>
                     <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
@@ -93,15 +88,16 @@ export default function EventsPublicPage() {
                       
                       <div className="flex items-center text-gray-700">
                         <MapPin className="h-4 w-4 mr-2" />
-                        <span>{event.location || "Evento Online"}</span>
+                        <span>{event.meeting_url ? "Evento Online" : "Presencial"}</span>
                       </div>
                       
-                      {event.capacity && (
-                        <div className="flex items-center text-gray-700">
-                          <Users className="h-4 w-4 mr-2" />
-                          <span>Vagas limitadas: {event.capacity}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center text-gray-700">
+                        <Users className="h-4 w-4 mr-2" />
+                        <span>Tipo: {event.type === "palestra" ? "Palestra" : 
+                               event.type === "supervisao" ? "Supervisão" : 
+                               event.type === "grupo_estudo" ? "Grupo de Estudo" : 
+                               event.type}</span>
+                      </div>
                     </div>
                     
                     {user ? (
