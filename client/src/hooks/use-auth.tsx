@@ -17,7 +17,9 @@ type AuthContextType = {
   registerMutation: UseMutationResult<User, Error, InsertUser>;
 };
 
-type LoginData = Pick<InsertUser, "email" | "password">;
+type LoginData = Pick<InsertUser, "email" | "password"> & {
+  isAdmin?: boolean;
+};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
