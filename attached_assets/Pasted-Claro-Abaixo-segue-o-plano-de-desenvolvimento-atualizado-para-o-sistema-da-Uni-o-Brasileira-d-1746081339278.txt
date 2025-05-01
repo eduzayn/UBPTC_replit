@@ -1,0 +1,194 @@
+Claro! Abaixo segue o **plano de desenvolvimento atualizado** para o sistema da **União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT)**, considerando todas as novas solicitações e funcionalidades estratégicas para uma associação 100% virtual, moderna e centrada no desenvolvimento dos profissionais de saúde mental.
+
+---
+
+# Plano de Desenvolvimento do Sistema UBPCT
+
+---
+
+## 1. Identidade Visual e Proposta de Design
+
+**Base:**  
+- Utilização do logotipo oficial (imagem enviada), com predominância das cores preto, branco e azul claro.
+- Layout moderno, clean, responsivo (mobile first), com tipografia contemporânea (ex: Montserrat/Open Sans).
+- Elementos visuais que transmitam acolhimento, profissionalismo e inovação.
+
+---
+
+## 2. Estrutura do Site Principal
+
+### 2.1 Páginas Públicas
+
+- **Home:**  
+  Banner institucional, missão, diferenciais, chamada para associação, destaques de eventos e benefícios.
+- **Sobre Nós:**  
+  História, equipe, corpo diretivo, parceiros (ex: Faculdade Dynamus).
+- **Serviços:**  
+  Detalhamento dos serviços (supervisão, grupos de estudo, biblioteca, benefícios).
+- **Eventos:**  
+  Calendário de encontros semanais, palestras e supervisões (com links para inscrição/participação).
+- **Associe-se:**  
+  Explicação dos planos, benefícios, regras para certificados, formulário de cadastro, link para pagamento Asaas.
+- **Notícias/Blog:**  
+  Artigos, novidades, comunicados e conteúdo educativo.
+- **Convênios e Benefícios:**  
+  Listagem de empresas parceiras, descontos em consultas, medicamentos, etc.
+- **Contato:**  
+  Formulário, e-mail, telefone, redes sociais.
+
+---
+
+## 3. Portal do Associado (Área Restrita)
+
+### 3.1 Funcionalidades Principais
+
+- **Dashboard:**  
+  Resumo do status da assinatura, próximos eventos, notificações e novidades.
+- **Minha Credencial Digital:**  
+  - Exibição de credencial virtual personalizada conforme ocupação (ex: Psicanalista, Terapeuta, Estudante).
+  - QR Code dinâmico para validação online (verificação de autenticidade e situação do associado).
+  - Download da credencial em PDF.
+- **Biblioteca de Ebooks:**  
+  - Visualização e download de ebooks.
+  - Área administrativa para upload de novos ebooks (com categorias, busca e controle de acesso).
+- **Eventos e Supervisões:**  
+  - Inscrição e acesso a links de reuniões virtuais (Zoom, Meet, etc.).
+  - Agenda semanal de supervisão, grupos de estudo e palestras.
+  - Emissão de certificados de participação.
+- **Financeiro:**  
+  - Visualização do histórico de pagamentos.
+  - Link para regularização de pendências via Asaas.
+  - Informações sobre descontos para pagamentos anuais ou via cartão.
+- **Certificados:**  
+  - Acompanhamento do ciclo anual.
+  - Geração automática de certificado de formação livre (não graduados) ou pós-graduação (graduados) em parceria com a Faculdade Dynamus, para associados adimplentes por 12 meses.
+- **Benefícios e Convênios:**  
+  - Acesso a vouchers, cupons e orientações para usufruir dos benefícios de empresas parceiras.
+- **Perfil:**  
+  - Atualização de dados cadastrais e documentos comprobatórios.
+
+---
+
+## 4. Funcionalidades Administrativas
+
+- **Gestão de Associados:**  
+  Cadastro, edição, busca, exportação de dados, controle de adimplência.
+- **Gestão de Ebooks:**  
+  Upload, categorização, exclusão e atualização de materiais.
+- **Gestão de Eventos:**  
+  Criação, edição, controle de inscrições e emissão de certificados.
+- **Gestão Financeira:**  
+  Relatórios de pagamentos, inadimplência, controle de descontos.
+- **Gestão de Convênios:**  
+  Cadastro e atualização de benefícios e parceiros.
+- **Comunicação:**  
+  Envio de comunicados, notificações e lembretes automáticos.
+
+---
+
+## 5. Integração de Pagamento (Asaas)
+
+- **Adesão e Assinatura Mensal:**  
+  - Página “Associe-se” com link pronto do Asaas para assinatura mensal de R$ 69,90.
+  - Opção de pagamento anual ou via cartão com 20% de desconto.
+  - Webhook do Asaas para atualizar automaticamente o status do associado no sistema.
+  - Bloqueio automático de acesso à área restrita em caso de inadimplência.
+- **Gestão de Descontos:**  
+  - Aplicação automática do desconto para pagamentos anuais ou via cartão.
+  - Exibição clara das opções e valores para o usuário.
+
+---
+
+## 6. Certificação e Regras de Benefício
+
+- **Certificado de Formação Livre:**  
+  - Para não graduados, após 12 meses de adimplência, com emissão automática e validação pelo sistema.
+- **Certificado de Pós-Graduação:**  
+  - Para graduados, em parceria com a Faculdade Dynamus de Campinas, emitido ao final de cada ciclo anual.
+- **Controle de Elegibilidade:**  
+  - O sistema verifica automaticamente o tempo de associação e adimplência para liberar o certificado correto.
+
+---
+
+## 7. QR Code de Validação de Credencial
+
+### 7.1 Como Funciona
+
+- Cada credencial digital exibida no portal do associado terá um QR Code único.
+- Ao escanear, o QR Code direciona para uma página pública de validação, mostrando:
+  - Nome do associado
+  - Ocupação
+  - Status da associação (adimplente/inadimplente)
+  - Validade da credencial
+- O QR Code é gerado dinamicamente e atualizado em tempo real conforme o status do associado.
+
+### 7.2 Implementação
+
+- Uso de biblioteca como `qrcode` (Node.js) para gerar QR Codes.
+- Endpoint público de validação que recebe o ID do associado e retorna os dados em tempo real.
+- Layout da credencial com design profissional, incluindo logo, nome, ocupação, QR Code e validade.
+
+---
+
+## 8. Biblioteca de Ebooks
+
+- Área administrativa para upload de arquivos PDF/EPUB.
+- Categorização dos ebooks (ex: Psicanálise, Terapias, Desenvolvimento Pessoal).
+- Controle de acesso: apenas associados adimplentes podem baixar.
+- Busca e filtros por título, autor ou categoria.
+
+---
+
+## 9. Gestão de Eventos Virtuais
+
+- Cadastro de encontros semanais de supervisão, grupos de estudo e palestras.
+- Inscrição online, com envio automático de link para participação.
+- Controle de presença e emissão de certificados digitais de participação.
+- Possibilidade de integração com plataformas de videoconferência (Zoom, Google Meet).
+
+---
+
+## 10. Benefícios e Convênios
+
+- Página exclusiva para acesso a descontos em consultas médicas online, medicamentos e outros benefícios.
+- Gerenciamento de parcerias e cupons de desconto.
+- Atualização dinâmica das empresas conveniadas.
+
+---
+
+## 11. Fluxo do Usuário
+
+1. **Acesso ao site** → Explora informações públicas.
+2. **Associe-se** → Preenche cadastro e realiza pagamento via link Asaas.
+3. **Acesso ao portal** → Ganha acesso à credencial digital, biblioteca, eventos e benefícios.
+4. **Participa dos encontros** → Supervisão, grupos de estudo, palestras.
+5. **Mantém-se adimplente** → Após 12 meses, recebe certificado conforme perfil.
+6. **Utiliza benefícios** → Acesso a convênios e descontos exclusivos.
+
+---
+
+## 12. Tecnologias Sugeridas
+
+- **Frontend:** React + Vite, Material UI ou Chakra UI.
+- **Backend:** Node.js + Express, integração com Neon (Postgres serverless).
+- **Pagamentos:** Integração via link do Asaas e webhooks.
+- **QR Code:** Biblioteca `qrcode` para geração dinâmica.
+- **Uploads:** Biblioteca `multer` ou similar para upload de ebooks.
+- **Segurança:** JWT para autenticação, HTTPS, LGPD.
+- **Hospedagem:** Replit (desenvolvimento), Vercel/Netlify (frontend), Heroku/Railway (backend).
+
+---
+
+## 13. Considerações Finais
+
+O sistema da UBPCT será uma plataforma robusta, moderna e 100% virtual, promovendo o desenvolvimento contínuo dos profissionais da saúde mental, com foco em atualização, networking, acesso a conteúdo exclusivo e benefícios reais. A credencial digital com QR Code e o controle automatizado de certificados garantem segurança, transparência e praticidade para associados e parceiros.
+
+---
+
+**Se desejar, posso fornecer wireframes, protótipos visuais ou exemplos de código para as principais funcionalidades. Gostaria de avançar para alguma dessas etapas?**
+
+Citations:
+[1] https://pplx-res.cloudinary.com/image/private/user_uploads/JwSoTzeSSHbgEZZ/Uniao-Brasileira-De-Psicanalise-1.jpg
+
+---
+Resposta do Perplexity: pplx.ai/share
