@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { createPaymentLink } from "@/lib/asaas";
+import { getPaymentLink } from "@/lib/asaas";
 
 const signupFormSchema = z.object({
   name: z.string().min(3, {
@@ -106,8 +106,8 @@ export default function SignupSection() {
           description: "Redirecionando para o pagamento...",
         });
 
-        // Create payment link
-        const paymentLink = await createPaymentLink(userResponse, data.plan);
+        // Get direct payment link (fixed link)
+        const paymentLink = getPaymentLink(data.plan);
         
         // Redirect to payment page
         window.location.href = paymentLink;
@@ -205,6 +205,43 @@ export default function SignupSection() {
           
           <div className="lg:w-1/2 w-full">
             <div className="bg-gray-100 rounded-lg p-6 shadow-md">
+              <h3 className="font-montserrat font-semibold text-xl mb-6 text-center">
+                Opções de Associação
+              </h3>
+              
+              <div className="mb-6 space-y-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-montserrat font-semibold text-lg">Plano Mensal</h4>
+                    <span className="text-xl font-bold text-primary">R$ 49,90</span>
+                  </div>
+                  <p className="text-gray-600 mb-4 text-sm">Acesso a todos os benefícios com pagamento mensal recorrente</p>
+                  <a href={getPaymentLink("monthly")} target="_blank" rel="noopener noreferrer">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      Assinar Plano Mensal
+                    </Button>
+                  </a>
+                </div>
+                
+                <div className="bg-primary/5 border border-primary p-4 rounded-lg shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="font-montserrat font-semibold text-lg">Plano Anual</h4>
+                    <span className="text-xl font-bold text-primary">R$ 498,00</span>
+                  </div>
+                  <p className="text-primary text-sm font-semibold mb-1">Economize 17% (equivalente a 2 meses grátis)</p>
+                  <p className="text-gray-600 mb-4 text-sm">Pagamento único anual com todos os benefícios inclusos</p>
+                  <a href={getPaymentLink("annual")} target="_blank" rel="noopener noreferrer">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      Assinar Plano Anual
+                    </Button>
+                  </a>
+                </div>
+              </div>
+              
+              <div className="text-center mb-6">
+                <p className="text-sm text-gray-600">Ou preencha o formulário abaixo para criar sua conta primeiro</p>
+              </div>
+              
               <h3 className="font-montserrat font-semibold text-xl mb-6 text-center">
                 Formulário de Associação
               </h3>
