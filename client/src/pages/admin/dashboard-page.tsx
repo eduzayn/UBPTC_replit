@@ -303,7 +303,7 @@ export default function AdminDashboardPage() {
                               {member.subscription_status === "active" ? "Ativo" : "Pendente"}
                             </Badge>
                           </TableCell>
-                          <TableCell>{format(new Date(member.created_at), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
+                          <TableCell>{formatDate(member.created_at)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -343,7 +343,7 @@ export default function AdminDashboardPage() {
                               {event.type === "palestra" ? "Palestra" : 
                                event.type === "supervisao" ? "Supervisão" : "Grupo de Estudo"}
                             </TableCell>
-                            <TableCell>{format(new Date(event.event_date), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
+                            <TableCell>{formatDate(event.event_date)}</TableCell>
                             <TableCell>{event.start_time} - {event.end_time}</TableCell>
                             <TableCell>
                               <Badge variant={isPast ? "outline" : "default"}>
@@ -396,8 +396,8 @@ export default function AdminDashboardPage() {
                               {payment.plan === "monthly" ? "Mensal" : "Anual"}
                             </TableCell>
                             <TableCell>{payment.payment_date 
-                              ? format(new Date(payment.payment_date), "dd/MM/yyyy", { locale: ptBR })
-                              : format(new Date(payment.created_at), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
+                              ? formatDate(payment.payment_date)
+                              : formatDate(payment.created_at)}</TableCell>
                             <TableCell>
                               <Badge 
                                 variant={
