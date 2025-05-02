@@ -9,6 +9,7 @@ import Footer from "./components/layout/footer";
 import HomePage from "./pages/home-page";
 import AuthPage from "./pages/auth-page";
 import DashboardPage from "./pages/dashboard-page";
+import ProfilePage from "./pages/profile-page";
 import CredentialPage from "./pages/credential-page";
 import LibraryPage from "./pages/library-page";
 import EventsPage from "./pages/events-page";
@@ -53,6 +54,7 @@ function Router() {
           
           {/* Protected Pages */}
           <ProtectedRoute path="/dashboard" component={DashboardPage} />
+          <ProtectedRoute path="/profile" component={ProfilePage} />
           <ProtectedRoute path="/credential" component={CredentialPage} />
           <ProtectedRoute path="/library" component={LibraryPage} />
           <ProtectedRoute path="/events" component={EventsPage} />
