@@ -22,6 +22,7 @@ import BlogPage from "./pages/blog-page";
 import ContactPage from "./pages/contact-page";
 import TermsPage from "./pages/terms-page";
 import PrivacyPage from "./pages/privacy-page";
+import PaymentRequiredPage from "./pages/payment-required-page";
 
 // Admin Pages
 import AdminDashboardPage from "./pages/admin/dashboard-page";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "wouter";
-import AppShell from "@/components/layout/app-shell";
+import { useLocation } from "wouter";
+import { AppShell } from "@/components/ui/app-shell";
 import { 
   Card, 
   CardContent, 
@@ -19,15 +19,15 @@ export default function PaymentRequiredPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentLink, setPaymentLink] = useState("");
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
     // Se o usuário não estiver logado, redirecionar para a página de login
     if (!user) {
-      navigate("/auth");
+      setLocation("/auth");
     }
-  }, [user, navigate]);
+  }, [user, setLocation]);
 
   async function handleCreatePaymentLink(plan: "monthly" | "annual") {
     if (!user) return;
