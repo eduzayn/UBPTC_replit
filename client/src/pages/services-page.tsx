@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Award, BookOpen, Calendar, Globe, Shield, Headphones } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { getPaymentLink } from "@/lib/asaas";
 
 export default function ServicesPage() {
   const { user } = useAuth();
@@ -119,11 +120,11 @@ export default function ServicesPage() {
             
             {!user && (
               <div className="mt-8">
-                <Link href="/auth">
+                <a href={getPaymentLink("monthly")} target="_blank" rel="noopener noreferrer">
                   <Button className="bg-primary hover:bg-primary/90">
                     Associe-se Agora
                   </Button>
-                </Link>
+                </a>
               </div>
             )}
           </div>
@@ -158,11 +159,11 @@ export default function ServicesPage() {
                     </li>
                   </ul>
                   {!user && (
-                    <Link href="/auth">
+                    <a href={getPaymentLink("monthly")} target="_blank" rel="noopener noreferrer">
                       <Button className="w-full bg-primary hover:bg-primary/90">
-                        Selecionar Plano
+                        Assinar Plano Mensal
                       </Button>
-                    </Link>
+                    </a>
                   )}
                 </CardContent>
               </Card>
@@ -195,11 +196,11 @@ export default function ServicesPage() {
                     </li>
                   </ul>
                   {!user && (
-                    <Link href="/auth">
+                    <a href={getPaymentLink("annual")} target="_blank" rel="noopener noreferrer">
                       <Button className="w-full bg-primary hover:bg-primary/90">
-                        Selecionar Plano
+                        Assinar Plano Anual
                       </Button>
-                    </Link>
+                    </a>
                   )}
                 </CardContent>
               </Card>

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { getPaymentLink } from "@/lib/asaas";
 
 export default function HeroSection() {
   return (
@@ -14,11 +15,11 @@ export default function HeroSection() {
               Associação dedicada a profissionais da saúde mental, oferecendo desenvolvimento, networking e credenciamento para psicanalistas e terapeutas.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="#associe-se">
+              <a href={getPaymentLink("monthly")} target="_blank" rel="noopener noreferrer">
                 <Button className="bg-primary hover:bg-primary/90 text-white font-montserrat font-semibold px-6 py-3 h-auto">
                   Associe-se Agora
                 </Button>
-              </Link>
+              </a>
               <Link href="/about">
                 <Button variant="outline" className="bg-transparent border border-white hover:bg-white hover:text-secondary font-montserrat font-semibold px-6 py-3 h-auto">
                   Saiba Mais

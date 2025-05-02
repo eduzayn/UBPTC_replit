@@ -2,11 +2,26 @@
  * Client-side utilities for Asaas payment integration
  */
 
+// Fixed payment links provided by Asaas
+const ASAAS_PAYMENT_LINKS = {
+  monthly: "https://www.asaas.com/c/2uf9eupj68j44kdm",
+  annual: "https://www.asaas.com/c/je0vt20sa7auznwo"
+};
+
+// Function to get payment link based on plan
+export const getPaymentLink = (plan: "monthly" | "annual"): string => {
+  return ASAAS_PAYMENT_LINKS[plan];
+};
+
 // Function to generate payment link based on member data and plan
 export const createPaymentLink = async (
   memberData: any,
   plan: "monthly" | "annual"
 ): Promise<string> => {
+  // Use fixed links for now as directed
+  return ASAAS_PAYMENT_LINKS[plan];
+  
+  /* Original API implementation kept for reference
   try {
     const response = await fetch("/api/payments/create-link", {
       method: "POST",
@@ -29,6 +44,7 @@ export const createPaymentLink = async (
     console.error("Error creating payment link:", error);
     throw error;
   }
+  */
 };
 
 // Function to check payment status
