@@ -7,21 +7,22 @@ export function AdminRoute({
   component: Component,
 }: {
   path: string;
-  component: () => React.JSX.Element | null;
+  component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
 
-  // User needs to be logged in
-  if (!isLoading && !user) {
+  if (isLoading) {
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-border" />
+        </div>
       </Route>
     );
   }
 
-  // User needs to be an admin
-  if (!isLoading && user && user.role !== "admin") {
+  // Verificar se o usuário está autenticado e é administrador
+  if (!user || user.role !== "admin") {
     return (
       <Route path={path}>
         <Redirect to="/dashboard" />
@@ -29,15 +30,5 @@ export function AdminRoute({
     );
   }
 
-  return (
-    <Route path={path}>
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <Component />
-      )}
-    </Route>
-  );
+  return <Route path={path} component={Component} />;
 }

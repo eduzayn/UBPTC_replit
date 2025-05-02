@@ -1,63 +1,55 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
-async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    
-    // Tratamento especial para erro de pagamento (403 com mensagem específica)
-    if (res.status === 403 && text.includes("pagamento")) {
-      throw new Error(`Pagamento pendente: É necessário regularizar sua assinatura para acessar este recurso.`);
-    }
-    
-    throw new Error(`${res.status}: ${text}`);
-  }
+interface GetQueryFnOptions {
+  on401?: "throw" | "returnNull";
 }
-
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
-}
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
-    },
-    mutations: {
-      retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
     },
   },
 });
+
+export function getQueryFn(options: GetQueryFnOptions = {}) {
+  return async ({ queryKey }: { queryKey: any }) => {
+    const url = Array.isArray(queryKey) ? queryKey[0] : queryKey;
+    const res = await fetch(url);
+
+    if (res.status === 401) {
+      if (options.on401 === "returnNull") {
+        return null;
+      } else {
+        throw new Error("Unauthorized");
+      }
+    }
+
+    if (!res.ok) {
+      throw new Error(`Error fetching ${url}: ${res.statusText}`);
+    }
+
+    return res.json();
+  };
+}
+
+export async function apiRequest(
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  url: string,
+  body?: any
+) {
+  const options: RequestInit = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  return fetch(url, options);
+}

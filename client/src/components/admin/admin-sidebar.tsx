@@ -1,34 +1,43 @@
-import { useLocation, Link } from "wouter";
-import { 
-  Layout, 
-  Users, 
-  BookOpen, 
-  Calendar, 
-  CreditCard, 
-  Award, 
-  Mail, 
-  BarChart3 
-} from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Calendar,
+  DollarSign,
+  Gift,
+  Mail,
+  Settings,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
 
-interface SidebarLinkProps {
+interface NavItemProps {
   href: string;
   icon: React.ReactNode;
-  children: React.ReactNode;
-  isActive: boolean;
+  title: string;
+  active?: boolean;
 }
 
-function SidebarLink({ href, icon, children, isActive }: SidebarLinkProps) {
+function NavItem({ href, icon, title, active }: NavItemProps) {
   return (
     <Link href={href}>
-      <a className={cn(
-        "flex items-center gap-3 py-2 px-3 rounded-md transition-colors", 
-        isActive 
-          ? "bg-primary text-primary-foreground" 
-          : "hover:bg-primary/10 hover:text-primary"
-      )}>
+      <a
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
+          active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+        )}
+      >
         {icon}
-        <span>{children}</span>
+        <span>{title}</span>
+        {active && (
+          <span className="ml-auto">
+            <ChevronRight className="h-4 w-4" />
+          </span>
+        )}
       </a>
     </Link>
   );
@@ -36,84 +45,110 @@ function SidebarLink({ href, icon, children, isActive }: SidebarLinkProps) {
 
 export function AdminSidebar() {
   const [location] = useLocation();
+  const { logoutMutation } = useAuth();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   const isActive = (path: string) => {
     return location === path;
   };
-  
+
   return (
-    <div className="w-64 border-r h-full min-h-screen sticky top-0 p-4 space-y-6 bg-background flex flex-col">
-      <div className="border-b pb-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <Layout className="h-5 w-5" /> 
-          <span>Portal Admin</span>
-        </h2>
+    <div className="hidden md:flex flex-col w-64 border-r bg-card">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+            A
+          </div>
+          <div className="font-bold text-xl">UBPCT Admin</div>
+        </div>
       </div>
       
-      <nav className="space-y-1 flex-1">
-        <SidebarLink 
-          href="/admin" 
-          icon={<BarChart3 className="h-5 w-5" />} 
-          isActive={isActive("/admin")}
-        >
-          Dashboard
-        </SidebarLink>
+      <div className="flex-1 overflow-auto py-4">
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-4 text-xs font-semibold text-muted-foreground">
+            Dashboard
+          </h2>
+          <div className="space-y-1">
+            <NavItem
+              href="/admin"
+              icon={<LayoutDashboard className="h-4 w-4" />}
+              title="Painel de Controle"
+              active={isActive("/admin")}
+            />
+          </div>
+        </div>
         
-        <SidebarLink 
-          href="/admin/members" 
-          icon={<Users className="h-5 w-5" />} 
-          isActive={isActive("/admin/members")}
-        >
-          Associados
-        </SidebarLink>
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-4 text-xs font-semibold text-muted-foreground">
+            Gerenciamento
+          </h2>
+          <div className="space-y-1">
+            <NavItem
+              href="/admin/members"
+              icon={<Users className="h-4 w-4" />}
+              title="Associados"
+              active={isActive("/admin/members")}
+            />
+            <NavItem
+              href="/admin/ebooks"
+              icon={<BookOpen className="h-4 w-4" />}
+              title="E-books"
+              active={isActive("/admin/ebooks")}
+            />
+            <NavItem
+              href="/admin/events"
+              icon={<Calendar className="h-4 w-4" />}
+              title="Eventos"
+              active={isActive("/admin/events")}
+            />
+            <NavItem
+              href="/admin/finance"
+              icon={<DollarSign className="h-4 w-4" />}
+              title="Finanças"
+              active={isActive("/admin/finance")}
+            />
+            <NavItem
+              href="/admin/benefits"
+              icon={<Gift className="h-4 w-4" />}
+              title="Benefícios/Parcerias"
+              active={isActive("/admin/benefits")}
+            />
+            <NavItem
+              href="/admin/communication"
+              icon={<Mail className="h-4 w-4" />}
+              title="Comunicação"
+              active={isActive("/admin/communication")}
+            />
+          </div>
+        </div>
         
-        <SidebarLink 
-          href="/admin/ebooks" 
-          icon={<BookOpen className="h-5 w-5" />} 
-          isActive={isActive("/admin/ebooks")}
-        >
-          E-books
-        </SidebarLink>
-        
-        <SidebarLink 
-          href="/admin/events" 
-          icon={<Calendar className="h-5 w-5" />} 
-          isActive={isActive("/admin/events")}
-        >
-          Eventos
-        </SidebarLink>
-        
-        <SidebarLink 
-          href="/admin/finance" 
-          icon={<CreditCard className="h-5 w-5" />} 
-          isActive={isActive("/admin/finance")}
-        >
-          Financeiro
-        </SidebarLink>
-        
-        <SidebarLink 
-          href="/admin/benefits" 
-          icon={<Award className="h-5 w-5" />} 
-          isActive={isActive("/admin/benefits")}
-        >
-          Convênios
-        </SidebarLink>
-        
-        <SidebarLink 
-          href="/admin/communication" 
-          icon={<Mail className="h-5 w-5" />} 
-          isActive={isActive("/admin/communication")}
-        >
-          Comunicações
-        </SidebarLink>
-      </nav>
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-4 text-xs font-semibold text-muted-foreground">
+            Sistema
+          </h2>
+          <div className="space-y-1">
+            <NavItem
+              href="/admin/settings"
+              icon={<Settings className="h-4 w-4" />}
+              title="Configurações"
+              active={isActive("/admin/settings")}
+            />
+          </div>
+        </div>
+      </div>
       
-      <div className="border-t pt-4">
-        <Link href="/dashboard">
-          <a className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <span>Voltar ao Portal do Associado</span>
-          </a>
-        </Link>
+      <div className="p-4 border-t">
+        <Button
+          variant="outline"
+          className="w-full justify-start text-muted-foreground"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sair
+        </Button>
       </div>
     </div>
   );
