@@ -1,0 +1,173 @@
+Pasted-Pasted-Com-base-nas-funcionalidades-detalhadas-para-a-Uni-o-Brasileira-de-Psican-lise-Cl-nica-e-Tera-1746152893685.txt
+Pasted-Com-base-nas-funcionalidades-detalhadas-para-a-Uni-o-Brasileira-de-Psican-lise-Cl-nica-e-Terap-uti-1746152767983.txt
+Com base nas funcionalidades detalhadas para a **União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT)**, segue o **esquema de tabelas do banco de dados** (modelo relacional, ideal para PostgreSQL/Neon). Esse esquema cobre cadastro de associados, pagamentos, credenciais, ebooks, eventos, certificados, convênios e auditoria.
+
+---
+
+## Esquema de Tabelas do Banco de Dados UBPCT
+
+### 1. ASSOCIADOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| nome               | VARCHAR(120)        | NOT NULL                    | Nome completo                           |
+| email              | VARCHAR(120)        | NOT NULL, UNIQUE            | E-mail                                  |
+| senha_hash         | VARCHAR(255)        | NOT NULL                    | Hash da senha                           |
+| cpf_cnpj           | VARCHAR(20)         | NOT NULL, UNIQUE            | CPF ou CNPJ                             |
+| telefone           | VARCHAR(20)         |                             | Telefone                                |
+| ocupacao           | VARCHAR(80)         | NOT NULL                    | Ocupação (ex: Psicanalista, Terapeuta)  |
+| graduado           | BOOLEAN             | NOT NULL DEFAULT FALSE      | Graduado (sim/não)                      |
+| data_cadastro      | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de cadastro                        |
+| status             | VARCHAR(20)         | DEFAULT 'ativo'             | ativo, inativo, pendente, bloqueado     |
+| assinatura_status  | VARCHAR(20)         | DEFAULT 'pendente'          | adimplente, inadimplente, cancelada     |
+| assinatura_inicio  | DATE                |                             | Data início assinatura                  |
+| assinatura_fim     | DATE                |                             | Data fim assinatura                     |
+| link_asaas         | VARCHAR(255)        |                             | Link de pagamento Asaas                 |
+
+---
+
+### 2. CREDENCIAIS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| numero_credencial  | VARCHAR(30)         | UNIQUE                      | Número/ID da credencial                 |
+| ocupacao           | VARCHAR(80)         |                             | Ocupação exibida                        |
+| qr_code_url        | VARCHAR(255)        |                             | URL do QR Code                          |
+| validade           | DATE                |                             | Data de validade                        |
+| status             | VARCHAR(20)         | DEFAULT 'ativa'             | ativa, suspensa, expirada               |
+| data_emissao       | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de emissão                         |
+
+---
+
+### 3. PAGAMENTOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| valor              | NUMERIC(10,2)       | NOT NULL                    | Valor pago                              |
+| tipo_pagamento     | VARCHAR(20)         | NOT NULL                    | mensal, anual, cartão, pix, boleto      |
+| desconto           | NUMERIC(10,2)       |                             | Valor do desconto                       |
+| status             | VARCHAR(20)         | NOT NULL                    | pago, pendente, cancelado               |
+| data_pagamento     | TIMESTAMP           |                             | Data do pagamento                       |
+| asaas_payment_id   | VARCHAR(80)         |                             | ID do pagamento no Asaas                |
+| link_recibo        | VARCHAR(255)        |                             | URL do recibo/nota                      |
+
+---
+
+### 4. EBOOKS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| titulo             | VARCHAR(150)        | NOT NULL                    | Título do ebook                         |
+| autor              | VARCHAR(100)        |                             | Autor                                   |
+| categoria          | VARCHAR(80)         |                             | Categoria                               |
+| arquivo_url        | VARCHAR(255)        | NOT NULL                    | URL do arquivo                          |
+| data_upload        | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de upload                          |
+| uploaded_by        | INT                 | REFERENCES associados(id)   | Quem fez o upload (admin)               |
+
+---
+
+### 5. EVENTOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| titulo             | VARCHAR(120)        | NOT NULL                    | Título do evento                        |
+| descricao          | TEXT                |                             | Descrição detalhada                     |
+| tipo               | VARCHAR(50)         | NOT NULL                    | supervisao, grupo_estudo, palestra      |
+| data_inicio        | TIMESTAMP           | NOT NULL                    | Data/hora início                        |
+| data_fim           | TIMESTAMP           |                             | Data/hora fim                           |
+| link_reuniao       | VARCHAR(255)        |                             | Link da reunião virtual                 |
+| certificado        | BOOLEAN             | DEFAULT FALSE               | Gera certificado?                       |
+
+---
+
+### 6. INSCRICOES_EVENTO
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| evento_id          | INT                 | REFERENCES eventos(id)      | FK para evento                          |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| data_inscricao     | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data da inscrição                       |
+| presente           | BOOLEAN             | DEFAULT FALSE               | Presença confirmada                     |
+| certificado_emitido| BOOLEAN             | DEFAULT FALSE               | Já emitiu certificado?                  |
+
+---
+
+### 7. CERTIFICADOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| tipo               | VARCHAR(50)         | NOT NULL                    | formacao_livre, pos_graduacao, evento   |
+| descricao          | VARCHAR(150)        |                             | Descrição do certificado                |
+| arquivo_url        | VARCHAR(255)        |                             | URL do certificado PDF                  |
+| data_emissao       | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de emissão                         |
+| ciclo_anual        | INT                 |                             | Ciclo/ano de referência                 |
+
+---
+
+### 8. CONVENIOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| empresa            | VARCHAR(120)        | NOT NULL                    | Nome da empresa conveniada              |
+| tipo_beneficio     | VARCHAR(100)        |                             | Ex: desconto consulta, medicamento      |
+| descricao          | TEXT                |                             | Descrição do benefício                  |
+| contato            | VARCHAR(100)        |                             | E-mail/telefone/site                    |
+| ativo              | BOOLEAN             | DEFAULT TRUE                | Convenio ativo?                         |
+| data_inicio        | DATE                |                             | Início do convênio                      |
+| data_fim           | DATE                |                             | Fim do convênio (opcional)              |
+
+---
+
+### 9. AUDITORIA (Opcional, mas recomendado)
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| tabela             | VARCHAR(50)         | NOT NULL                    | Nome da tabela afetada                  |
+| registro_id        | INT                 |                             | ID do registro alterado                 |
+| acao               | VARCHAR(20)         | NOT NULL                    | insert, update, delete                  |
+| usuario_id         | INT                 | REFERENCES associados(id)   | Usuário/admin que realizou a ação       |
+| data_acao          | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data/hora da ação                       |
+| detalhes           | TEXT                |                             | Detalhes da alteração                   |
+
+---
+
+## RELACIONAMENTOS IMPORTANTES
+
+- **ASSOCIADOS** 1:N **CREDENCIAIS**
+- **ASSOCIADOS** 1:N **PAGAMENTOS**
+- **ASSOCIADOS** N:M **EVENTOS** (via INSCRICOES_EVENTO)
+- **ASSOCIADOS** 1:N **CERTIFICADOS**
+- **ASSOCIADOS** N:M **EBOOKS** (caso queira registrar downloads)
+- **EVENTOS** 1:N **INSCRICOES_EVENTO**
+- **ASSOCIADOS** N:M **CONVENIOS** (caso queira registrar uso de benefícios)
+
+---
+
+## OBSERVAÇÕES
+
+- Todos os uploads (ebooks, certificados) devem ser armazenados em serviço seguro (ex: S3, Google Cloud Storage) e o banco guarda apenas a URL.
+- O QR Code da credencial pode ser um link para endpoint `/validar-credencial/:numero_credencial`.
+- O status de adimplência é atualizado automaticamente via webhook do Asaas.
+- O ciclo anual para certificados deve ser controlado via campo `ciclo_anual` e datas de pagamento.
+
+---
+
+Se precisar dos comandos SQL completos para criação dessas tabelas ou quiser exemplos de consultas, posso gerar para você! Se desejar o diagrama ER (entidade-relacionamento) visual, também posso descrever.
+
+Citations:
+[1] https://pplx-res.cloudinary.com/image/private/user_uploads/JwSoTzeSSHbgEZZ/Uniao-Brasileira-De-Psicanalise-1.jpg
+
+---
+Resposta do Perplexity: https://www.perplexity.ai/search/qual-o-melhor-sistema-de-gesta-yA.ZsdHYSYOEdfdRiwROxg?utm_source=copy_output

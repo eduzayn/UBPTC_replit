@@ -16,6 +16,47 @@ const isAuthenticated = (req: any, res: any, next: any) => {
   return res.status(401).json({ message: "Não autenticado" });
 };
 
+// Middleware to check if user has an active subscription
+const hasActiveSubscription = async (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  // Public routes that don't require active subscription
+  const publicRoutes = [
+    '/api/payments/status',
+    '/api/payments/create-link',
+    '/api/payments/update-method'
+  ];
+  
+  // Skip subscription check for payment-related routes
+  if (publicRoutes.some(route => req.path.startsWith(route))) {
+    return next();
+  }
+  
+  // Skip subscription check for admins
+  if (req.user.role === 'admin') {
+    return next();
+  }
+  
+  try {
+    // Check if user has active subscription
+    const status = req.user.subscription_status;
+    
+    if (status !== 'active') {
+      return res.status(403).json({ 
+        message: "Assinatura inativa", 
+        code: "INACTIVE_SUBSCRIPTION" 
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error("Error checking subscription:", error);
+    next();
+  }
+};
+
 // Middleware to check if user is admin
 const isAdmin = (req: any, res: any, next: any) => {
   if (req.isAuthenticated() && req.user.role === "admin") {
@@ -29,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Credentials routes
-  app.get("/api/credentials/my", isAuthenticated, async (req, res) => {
+  app.get("/api/credentials/my", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const credential = await credentialService.getUserCredential(req.user.id);
       res.json(credential);
