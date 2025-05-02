@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { AppShell } from "@/components/ui/app-shell";
+import { AppShell } from "../components/ui/app-shell";
 import { 
   Card, 
   CardContent, 

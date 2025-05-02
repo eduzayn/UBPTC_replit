@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
+import Header from "../../components/layout/header";
+import Footer from "../../components/layout/footer";
 
 export interface AppShellProps {
   children: ReactNode;
@@ -9,7 +9,7 @@ export interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <Header />
       <main className="flex-grow">{children}</main>
       <Footer />
     </div>

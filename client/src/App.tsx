@@ -49,6 +49,7 @@ function Router() {
           <Route path="/validate/:credentialId" component={ValidateCredentialPage} />
           <Route path="/terms" component={TermsPage} />
           <Route path="/privacy" component={PrivacyPage} />
+          <Route path="/payment-required" component={PaymentRequiredPage} />
           
           {/* Protected Pages */}
           <ProtectedRoute path="/dashboard" component={DashboardPage} />

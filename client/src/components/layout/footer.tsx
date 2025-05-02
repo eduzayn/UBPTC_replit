@@ -18,23 +18,23 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/">
-                  <a className="text-gray-300 hover:text-white transition">Início</a>
+                <Link href="/" className="text-gray-300 hover:text-white transition">
+                  Início
                 </Link>
               </li>
               <li>
-                <Link href="/about">
-                  <a className="text-gray-300 hover:text-white transition">Sobre</a>
+                <Link href="/about" className="text-gray-300 hover:text-white transition">
+                  Sobre
                 </Link>
               </li>
               <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition">Serviços</a>
+                <Link href="/services" className="text-gray-300 hover:text-white transition">
+                  Serviços
                 </Link>
               </li>
               <li>
-                <Link href="/contact">
-                  <a className="text-gray-300 hover:text-white transition">Contato</a>
+                <Link href="/contact" className="text-gray-300 hover:text-white transition">
+                  Contato
                 </Link>
               </li>
             </ul>
@@ -44,23 +44,23 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Área do Membro</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/dashboard">
-                  <a className="text-gray-300 hover:text-white transition">Dashboard</a>
+                <Link href="/dashboard" className="text-gray-300 hover:text-white transition">
+                  Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/library">
-                  <a className="text-gray-300 hover:text-white transition">Biblioteca</a>
+                <Link href="/library" className="text-gray-300 hover:text-white transition">
+                  Biblioteca
                 </Link>
               </li>
               <li>
-                <Link href="/events">
-                  <a className="text-gray-300 hover:text-white transition">Eventos</a>
+                <Link href="/events" className="text-gray-300 hover:text-white transition">
+                  Eventos
                 </Link>
               </li>
               <li>
-                <Link href="/certificates">
-                  <a className="text-gray-300 hover:text-white transition">Certificados</a>
+                <Link href="/certificates" className="text-gray-300 hover:text-white transition">
+                  Certificados
                 </Link>
               </li>
             </ul>
@@ -78,11 +78,11 @@ export default function Footer() {
           <p className="text-gray-400 text-sm">&copy; {currentYear} União Brasileira de Psicanálise Clínica e Terapêutica. Todos os direitos reservados.</p>
           
           <div className="mt-4 md:mt-0 space-x-4 text-sm">
-            <Link href="/terms">
-              <a className="text-gray-400 hover:text-white transition">Termos de Uso</a>
+            <Link href="/terms" className="text-gray-400 hover:text-white transition">
+              Termos de Uso
             </Link>
-            <Link href="/privacy">
-              <a className="text-gray-400 hover:text-white transition">Política de Privacidade</a>
+            <Link href="/privacy" className="text-gray-400 hover:text-white transition">
+              Política de Privacidade
             </Link>
           </div>
         </div>
