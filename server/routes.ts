@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/credentials/:id/download", isAuthenticated, async (req, res) => {
+  app.get("/api/credentials/:id/download", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const pdfBuffer = await credentialService.generateCredentialPDF(parseInt(req.params.id));
       res.setHeader("Content-Type", "application/pdf");
@@ -100,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ebooks routes
-  app.get("/api/ebooks", isAuthenticated, async (req, res) => {
+  app.get("/api/ebooks", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const ebooks = await ebookService.getAllEbooks();
       res.json(ebooks);
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/ebooks/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/ebooks/:id", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const ebook = await ebookService.getEbookById(parseInt(req.params.id));
       res.json(ebook);
@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/ebooks/:id/download", isAuthenticated, async (req, res) => {
+  app.get("/api/ebooks/:id/download", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const fileInfo = await ebookService.getEbookFileInfo(parseInt(req.params.id));
       res.setHeader("Content-Type", "application/pdf");
@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Events routes
-  app.get("/api/events", isAuthenticated, async (req, res) => {
+  app.get("/api/events", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const events = await eventService.getEventsForUser(req.user.id);
       res.json(events);
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/events/:id", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const event = await eventService.getEventById(parseInt(req.params.id));
       res.json(event);
@@ -196,7 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/register", isAuthenticated, async (req, res) => {
+  app.post("/api/events/:id/register", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const registration = await eventService.registerUserForEvent(req.user.id, parseInt(req.params.id));
       res.status(201).json(registration);
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id/certificate", isAuthenticated, async (req, res) => {
+  app.get("/api/events/:id/certificate", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const certificateFile = await eventService.getEventCertificate(req.user.id, parseInt(req.params.id));
       
@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Certificates routes
-  app.get("/api/certificates", isAuthenticated, async (req, res) => {
+  app.get("/api/certificates", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const certificates = await certificateService.getUserCertificates(req.user.id);
       res.json(certificates);
@@ -311,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/certificates/:id/download", isAuthenticated, async (req, res) => {
+  app.get("/api/certificates/:id/download", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const certificateFile = await certificateService.getCertificateFile(parseInt(req.params.id), req.user.id);
       
