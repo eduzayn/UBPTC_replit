@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
 import { ProtectedRoute } from "./lib/protected-route";
+import { AdminRoute } from "./lib/admin-route";
 
 // Layouts
 import Header from "./components/layout/header";
@@ -30,6 +31,9 @@ import AdminDashboardPage from "./pages/admin/dashboard-page";
 import AdminMembersPage from "./pages/admin/members-page";
 import AdminEbooksPage from "./pages/admin/ebooks-page";
 import AdminEventsPage from "./pages/admin/events-page";
+import AdminFinancePage from "./pages/admin/finance-page";
+import AdminBenefitsPage from "./pages/admin/benefits-page";
+import AdminCommunicationPage from "./pages/admin/communication-page";
 
 import NotFound from "./pages/not-found";
 
@@ -62,10 +66,13 @@ function Router() {
           <ProtectedRoute path="/benefits" component={BenefitsPage} />
           
           {/* Admin Routes */}
-          <ProtectedRoute path="/admin" component={AdminDashboardPage} />
-          <ProtectedRoute path="/admin/members" component={AdminMembersPage} />
-          <ProtectedRoute path="/admin/ebooks" component={AdminEbooksPage} />
-          <ProtectedRoute path="/admin/events" component={AdminEventsPage} />
+          <AdminRoute path="/admin" component={AdminDashboardPage} />
+          <AdminRoute path="/admin/members" component={AdminMembersPage} />
+          <AdminRoute path="/admin/ebooks" component={AdminEbooksPage} />
+          <AdminRoute path="/admin/events" component={AdminEventsPage} />
+          <AdminRoute path="/admin/finance" component={AdminFinancePage} />
+          <AdminRoute path="/admin/benefits" component={AdminBenefitsPage} />
+          <AdminRoute path="/admin/communication" component={AdminCommunicationPage} />
           
           {/* Fallback to 404 */}
           <Route component={NotFound} />

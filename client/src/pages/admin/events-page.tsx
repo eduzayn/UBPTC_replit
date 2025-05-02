@@ -1,32 +1,24 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from "@/components/ui/card";
+import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar as CalendarIcon, Search, Plus, Edit, Trash2, Users, CalendarCheck, Clock } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Form,
   FormControl,
@@ -37,90 +29,61 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  Loader2, 
-  Search, 
-  Plus, 
-  Pencil,
-  Trash2,
-  Calendar,
-  Clock,
-  Users,
-  Link as LinkIcon
-} from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 
-interface Event {
-  id: number;
-  title: string;
-  description: string;
-  type: string;
-  event_date: string;
-  start_time: string;
-  end_time: string;
-  meeting_url?: string;
-  certificate_template?: string;
-  created_at: string;
-}
+// Tipos de eventos disponíveis
+const eventTypes = [
+  { value: "palestra", label: "Palestra" },
+  { value: "supervisao", label: "Supervisão Clínica" },
+  { value: "grupo_estudo", label: "Grupo de Estudo" },
+  { value: "congresso", label: "Congresso" },
+  { value: "formacao", label: "Formação" },
+  { value: "workshop", label: "Workshop" },
+];
 
-// Schema for event form
-const eventSchema = z.object({
+// Esquema de validação para o formulário de evento
+const eventFormSchema = z.object({
   title: z.string().min(3, "O título deve ter pelo menos 3 caracteres"),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
-  type: z.string().min(2, "Selecione um tipo de evento"),
-  event_date: z.string().min(1, "Selecione uma data"),
-  start_time: z.string().min(1, "Informe a hora de início"),
-  end_time: z.string().min(1, "Informe a hora de término"),
-  meeting_url: z.string().url("Insira uma URL válida").or(z.string().length(0).optional()),
-  certificate_template: z.string().url("Insira uma URL válida").or(z.string().length(0).optional()),
+  type: z.string().min(1, "Selecione um tipo de evento"),
+  event_date: z.date({
+    required_error: "Selecione uma data para o evento",
+  }),
+  start_time: z.string().min(1, "Selecione um horário de início"),
+  end_time: z.string().min(1, "Selecione um horário de término"),
+  meeting_url: z.string().url("Insira uma URL válida para a reunião").optional().or(z.literal("")),
+  certificate_template: z.string().optional(),
 });
 
-type EventFormValues = z.infer<typeof eventSchema>;
+type EventFormValues = z.infer<typeof eventFormSchema>;
 
 export default function AdminEventsPage() {
-  const { user } = useAuth();
-  const [location, navigate] = useLocation();
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [tabView, setTabView] = useState("upcoming");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentEventId, setCurrentEventId] = useState<number | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const { toast } = useToast();
 
-  // Redirect if not admin
-  useEffect(() => {
-    if (user && user.role !== "admin") {
-      navigate("/");
-    }
-  }, [user, navigate]);
-
-  // Fetch events
-  const { data: events, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/events'],
-    enabled: !!user && user.role === "admin",
-  });
-
-  // Form for adding/editing events
+  // Formulário de evento
   const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(eventFormSchema),
     defaultValues: {
       title: "",
       description: "",
       type: "",
-      event_date: "",
+      event_date: undefined,
       start_time: "",
       end_time: "",
       meeting_url: "",
@@ -128,414 +91,569 @@ export default function AdminEventsPage() {
     },
   });
 
-  // Reset form when editing event changes
-  useEffect(() => {
-    if (editingEvent) {
-      form.reset({
-        title: editingEvent.title,
-        description: editingEvent.description,
-        type: editingEvent.type,
-        event_date: new Date(editingEvent.event_date).toISOString().split('T')[0], // Format as YYYY-MM-DD
-        start_time: editingEvent.start_time,
-        end_time: editingEvent.end_time,
-        meeting_url: editingEvent.meeting_url || "",
-        certificate_template: editingEvent.certificate_template || "",
-      });
-    } else {
-      form.reset({
-        title: "",
-        description: "",
-        type: "",
-        event_date: "",
-        start_time: "",
-        end_time: "",
-        meeting_url: "",
-        certificate_template: "",
-      });
-    }
-  }, [editingEvent, form]);
+  // Consulta para obter eventos
+  const { data: events = [], isLoading } = useQuery({
+    queryKey: ["/api/events"],
+    retry: false,
+  });
 
-  // Create event mutation
+  // Consulta para obter registros de eventos
+  const { data: registrations = [], isLoading: isLoadingRegistrations } = useQuery({
+    queryKey: ["/api/events/registrations"],
+    retry: false,
+    enabled: activeTab === "attendees"
+  });
+
+  // Mutação para criar novo evento
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormValues) => {
-      const response = await apiRequest("POST", "/api/events", data);
-      return response.json();
+      return await apiRequest("POST", "/api/events", data);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({
-        title: "Evento adicionado",
-        description: "O evento foi adicionado com sucesso.",
+        title: "Evento criado",
+        description: "O evento foi criado com sucesso.",
       });
-      setIsAddDialogOpen(false);
+      setIsDialogOpen(false);
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: "Erro ao adicionar evento",
-        description: error.message || "Ocorreu um erro ao adicionar o evento. Tente novamente.",
+        title: "Erro ao criar",
+        description: "Não foi possível criar o evento. Tente novamente.",
         variant: "destructive",
       });
     },
   });
 
-  // Update event mutation
+  // Mutação para atualizar evento
   const updateEventMutation = useMutation({
-    mutationFn: async (data: EventFormValues & { id: number }) => {
-      const { id, ...eventData } = data;
-      const response = await apiRequest("PUT", `/api/events/${id}`, eventData);
-      return response.json();
+    mutationFn: async ({ id, data }: { id: number; data: EventFormValues }) => {
+      return await apiRequest("PUT", `/api/events/${id}`, data);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({
         title: "Evento atualizado",
         description: "O evento foi atualizado com sucesso.",
       });
-      setIsAddDialogOpen(false);
-      setEditingEvent(null);
+      setIsDialogOpen(false);
+      setIsEditMode(false);
+      setCurrentEventId(null);
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: "Erro ao atualizar evento",
-        description: error.message || "Ocorreu um erro ao atualizar o evento. Tente novamente.",
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar o evento. Tente novamente.",
         variant: "destructive",
       });
     },
   });
 
-  // Delete event mutation
+  // Mutação para excluir evento
   const deleteEventMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/events/${id}`);
+      return await apiRequest("DELETE", `/api/events/${id}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({
         title: "Evento excluído",
         description: "O evento foi excluído com sucesso.",
       });
-      setIsDeleteDialogOpen(false);
-      setEventToDelete(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: "Erro ao excluir evento",
-        description: error.message || "Ocorreu um erro ao excluir o evento. Tente novamente.",
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir o evento. Tente novamente.",
         variant: "destructive",
       });
     },
   });
 
+  // Mutação para atualizar presença
+  const updateAttendanceMutation = useMutation({
+    mutationFn: async ({ eventId, userId, attended }: { eventId: number; userId: number; attended: boolean }) => {
+      return await apiRequest("PUT", `/api/events/${eventId}/attendance`, { userId, attended });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events/registrations"] });
+      toast({
+        title: "Presença atualizada",
+        description: "A presença do associado foi atualizada com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao atualizar presença",
+        description: "Não foi possível atualizar a presença. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Filtrar os eventos por data atual
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingEvents = Array.isArray(events) 
+    ? events.filter((event: any) => new Date(event.event_date) >= today)
+    : [];
+    
+  const pastEvents = Array.isArray(events)
+    ? events.filter((event: any) => new Date(event.event_date) < today)
+    : [];
+
+  // Filtrar os eventos
+  const filteredEvents = activeTab === "upcoming" ? upcomingEvents : pastEvents;
+  
+  const filteredFilteredEvents = filteredEvents.filter((event: any) => {
+    const matchesSearch = searchQuery === "" || 
+      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesType = typeFilter === "all" || 
+      event.type === typeFilter;
+    
+    return matchesSearch && matchesType;
+  });
+
+  // Função para carregar dados do evento para edição
+  const handleEditEvent = (event: any) => {
+    form.reset({
+      title: event.title,
+      description: event.description,
+      type: event.type,
+      event_date: new Date(event.event_date),
+      start_time: event.start_time,
+      end_time: event.end_time,
+      meeting_url: event.meeting_url || "",
+      certificate_template: event.certificate_template || "",
+    });
+    setCurrentEventId(event.id);
+    setIsEditMode(true);
+    setIsDialogOpen(true);
+  };
+
+  // Função para abrir modal de adição
+  const handleAddNewEvent = () => {
+    form.reset({
+      title: "",
+      description: "",
+      type: "",
+      event_date: undefined,
+      start_time: "",
+      end_time: "",
+      meeting_url: "",
+      certificate_template: "",
+    });
+    setIsEditMode(false);
+    setCurrentEventId(null);
+    setIsDialogOpen(true);
+  };
+
+  // Função para confirmar exclusão do evento
+  const handleDeleteEvent = (id: number) => {
+    if (confirm("Tem certeza que deseja excluir este evento? Esta ação não poderá ser desfeita.")) {
+      deleteEventMutation.mutate(id);
+    }
+  };
+
+  // Função para marcar presença
+  const handleToggleAttendance = (eventId: number, userId: number, currentAttendance: boolean) => {
+    updateAttendanceMutation.mutate({ 
+      eventId, 
+      userId, 
+      attended: !currentAttendance 
+    });
+  };
+
+  // Enviar formulário
   const onSubmit = (data: EventFormValues) => {
-    if (editingEvent) {
-      updateEventMutation.mutate({ ...data, id: editingEvent.id });
+    if (isEditMode && currentEventId) {
+      updateEventMutation.mutate({ id: currentEventId, data });
     } else {
       createEventMutation.mutate(data);
     }
   };
 
-  const handleDeleteEvent = () => {
-    if (eventToDelete) {
-      deleteEventMutation.mutate(eventToDelete.id);
+  // Organizar registros por evento
+  const registrationsByEvent: Record<number, any[]> = {};
+  
+  if (Array.isArray(registrations)) {
+    for (const reg of registrations) {
+      if (!registrationsByEvent[reg.event_id]) {
+        registrationsByEvent[reg.event_id] = [];
+      }
+      registrationsByEvent[reg.event_id].push(reg);
     }
-  };
-
-  if (!user || user.role !== "admin") return null;
-
-  // Filter events based on search, type, and tab
-  const filteredEvents = events?.filter(event => {
-    const matchesSearch = 
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = 
-      typeFilter === "all" || 
-      event.type.toLowerCase() === typeFilter.toLowerCase();
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const eventDate = new Date(event.event_date);
-    eventDate.setHours(0, 0, 0, 0);
-    const isPast = eventDate < today;
-    
-    const matchesTab = 
-      (tabView === "upcoming" && !isPast) || 
-      (tabView === "past" && isPast);
-    
-    return matchesSearch && matchesType && matchesTab;
-  }) || [];
-
-  // Sort events: upcoming by date (closest first), past by date (most recent first)
-  filteredEvents.sort((a, b) => {
-    const dateA = new Date(a.event_date);
-    const dateB = new Date(b.event_date);
-    
-    if (tabView === "upcoming") {
-      return dateA.getTime() - dateB.getTime(); // Ascending for upcoming
-    } else {
-      return dateB.getTime() - dateA.getTime(); // Descending for past
-    }
-  });
-
-  // Extract unique event types
-  const eventTypes = events 
-    ? [...new Set(events.map(event => event.type))]
-    : [];
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR').format(date);
-  };
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Gerenciamento de Eventos</h1>
-          <p className="text-gray-600">
-            Administre os eventos e supervisões da UBPCT
-          </p>
+    <AdminShell title="Gestão de Eventos">
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4">
+          <TabsList>
+            <TabsTrigger value="upcoming">Próximos Eventos</TabsTrigger>
+            <TabsTrigger value="past">Eventos Passados</TabsTrigger>
+            <TabsTrigger value="attendees">Presenças</TabsTrigger>
+          </TabsList>
+          <Button className="gap-2 mt-4 sm:mt-0" onClick={handleAddNewEvent}>
+            <Plus className="h-4 w-4" />
+            <span>Novo Evento</span>
+          </Button>
         </div>
-        <Button 
-          className="flex items-center gap-2 bg-primary"
-          onClick={() => {
-            setEditingEvent(null);
-            setIsAddDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Criar Evento
-        </Button>
-      </div>
+        
+        <TabsContent value="upcoming" className="mt-6">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Filtrar Eventos</CardTitle>
+              <CardDescription>
+                Pesquise e filtre os próximos eventos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar por título ou descrição..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Filtrar por tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Tipos</SelectItem>
+                    {eventTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Tabs value={tabView} onValueChange={setTabView} className="mb-6">
-        <TabsList className="mb-8">
-          <TabsTrigger value="upcoming">Próximos Eventos</TabsTrigger>
-          <TabsTrigger value="past">Eventos Passados</TabsTrigger>
-        </TabsList>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : filteredFilteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFilteredEvents.map((event: any) => (
+                <Card key={event.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between">
+                      <Badge variant="outline" className="mb-2">
+                        {eventTypes.find(t => t.value === event.type)?.label || event.type}
+                      </Badge>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <CardTitle>{event.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {event.description}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>{format(new Date(event.event_date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>{event.start_time} - {event.end_time}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between pt-3 border-t">
+                    <div className="flex items-center text-sm">
+                      <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>0 inscritos</span>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground bg-muted rounded-lg">
+              Nenhum evento futuro encontrado com os filtros aplicados.
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="past" className="mt-6">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Filtrar Eventos Passados</CardTitle>
+              <CardDescription>
+                Pesquise e filtre os eventos já realizados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar por título ou descrição..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Filtrar por tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Tipos</SelectItem>
+                    {eventTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : filteredFilteredEvents.length > 0 ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Evento</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Participantes</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFilteredEvents.map((event: any) => (
+                    <TableRow key={event.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{event.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{event.description}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(event.event_date), "dd/MM/yyyy")}
+                        <p className="text-xs text-muted-foreground">{event.start_time} - {event.end_time}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {eventTypes.find(t => t.value === event.type)?.label || event.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>0</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Editar</span>
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Excluir</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground bg-muted rounded-lg">
+              Nenhum evento passado encontrado com os filtros aplicados.
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="attendees" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Controle de Presenças</CardTitle>
+              <CardDescription>
+                Gerencie a presença dos associados nos eventos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingRegistrations ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : Object.keys(registrationsByEvent).length > 0 ? (
+                <div className="space-y-8">
+                  {Object.entries(registrationsByEvent).map(([eventId, eventRegistrations]) => {
+                    const event = events.find((e: any) => e.id === parseInt(eventId));
+                    if (!event) return null;
+                    
+                    return (
+                      <div key={eventId} className="border rounded-lg p-4">
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold">{event.title}</h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CalendarIcon className="h-4 w-4" />
+                            <span>{format(new Date(event.event_date), "dd/MM/yyyy")}</span>
+                            <span>({event.start_time} - {event.end_time})</span>
+                          </div>
+                        </div>
+                        
+                        <div className="rounded-md border">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Associado</TableHead>
+                                <TableHead>Data de Inscrição</TableHead>
+                                <TableHead className="text-center">Presença</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {eventRegistrations.map((registration: any) => (
+                                <TableRow key={registration.id}>
+                                  <TableCell>
+                                    <div>
+                                      <p className="font-medium">{registration.user?.name || "Associado"}</p>
+                                      <p className="text-xs text-muted-foreground">{registration.user?.email || "Email não disponível"}</p>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    {format(new Date(registration.created_at), "dd/MM/yyyy")}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Button 
+                                      variant={registration.attended ? "default" : "outline"}
+                                      size="sm"
+                                      className="gap-2"
+                                      onClick={() => handleToggleAttendance(
+                                        parseInt(eventId), 
+                                        registration.user_id, 
+                                        registration.attended
+                                      )}
+                                    >
+                                      {registration.attended ? (
+                                        <>
+                                          <CalendarCheck className="h-4 w-4" />
+                                          <span>Presente</span>
+                                        </>
+                                      ) : (
+                                        "Marcar Presença"
+                                      )}
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground bg-muted rounded-lg">
+                  Nenhuma inscrição em eventos encontrada.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
-      <Card className="mb-8">
-        <CardHeader className="pb-3">
-          <CardTitle>Filtros e Busca</CardTitle>
-          <CardDescription>
-            Encontre eventos específicos usando os filtros abaixo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                placeholder="Buscar por título ou descrição..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <div className="w-full sm:w-48">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo de evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os tipos</SelectItem>
-                  {eventTypes.map((type) => (
-                    <SelectItem key={type} value={type.toLowerCase()}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          Array(3).fill(0).map((_, index) => (
-            <Card key={index} className="h-80 animate-pulse">
-              <div className="h-12 bg-gray-200"></div>
-              <CardContent className="p-4">
-                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))
-        ) : error ? (
-          <div className="col-span-full text-center py-8">
-            <p className="text-red-500 mb-4">
-              Ocorreu um erro ao carregar os eventos. Por favor, tente novamente mais tarde.
-            </p>
-            <Button 
-              onClick={() => refetch()} 
-              variant="outline"
-            >
-              Tentar novamente
-            </Button>
-          </div>
-        ) : filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
-            <Card key={event.id} className="overflow-hidden flex flex-col">
-              <div className="bg-primary text-white p-2 text-center font-semibold flex justify-between items-center">
-                <span>{event.type}</span>
-                <div className="flex gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 text-white hover:bg-primary/80"
-                    onClick={() => {
-                      setEditingEvent(event);
-                      setIsAddDialogOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 text-white hover:bg-primary/80"
-                    onClick={() => {
-                      setEventToDelete(event);
-                      setIsDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <CardContent className="p-4 flex-grow flex flex-col">
-                <h3 className="text-lg font-semibold mb-3">{event.title}</h3>
-                <p className="text-sm text-gray-600 line-clamp-3 mb-4">
-                  {event.description}
-                </p>
-                
-                <div className="mt-auto space-y-2">
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <Calendar className="h-4 w-4 text-primary mr-2" />
-                    <span>{formatDate(event.event_date)}</span>
-                  </div>
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <Clock className="h-4 w-4 text-primary mr-2" />
-                    <span>{event.start_time} - {event.end_time}</span>
-                  </div>
-                  {event.meeting_url && (
-                    <div className="flex items-center text-gray-700 text-sm">
-                      <LinkIcon className="h-4 w-4 text-primary mr-2" />
-                      <a 
-                        href={event.meeting_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline overflow-hidden text-ellipsis"
-                      >
-                        Link da Reunião
-                      </a>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <Badge variant="outline" className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {new Date(event.event_date) > new Date() ? 'Futuro' : 'Passado'}
-                    </Badge>
-                    {event.certificate_template && (
-                      <Badge variant="outline" className="bg-green-50">
-                        Certificado Disponível
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate(`/admin/events/${event.id}/attendees`)}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Ver Inscritos
-                </Button>
-              </CardFooter>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8">
-            <p className="text-gray-500 mb-4">
-              {tabView === "upcoming" 
-                ? "Não há próximos eventos planejados" 
-                : "Não há eventos passados"} 
-              {(searchTerm || typeFilter !== "all") && " com os filtros atuais"}.
-            </p>
-            {(searchTerm || typeFilter !== "all") && (
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm("");
-                  setTypeFilter("all");
-                }}
-              >
-                Limpar Filtros
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Add/Edit Event Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
-              {editingEvent ? "Editar Evento" : "Criar Novo Evento"}
+              {isEditMode ? "Editar Evento" : "Criar Novo Evento"}
             </DialogTitle>
             <DialogDescription>
-              Preencha as informações abaixo para {editingEvent ? "editar o" : "criar um novo"} evento.
+              {isEditMode
+                ? "Edite as informações do evento selecionado."
+                : "Preencha as informações para criar um novo evento."}
             </DialogDescription>
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Título do Evento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o título do evento" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Descreva o evento" 
+                        rows={3} 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Título *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Título do evento" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
                 <FormField
                   control={form.control}
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de Evento *</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value}
-                      >
+                      <FormLabel>Tipo de Evento</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione um tipo" />
+                            <SelectValue placeholder="Selecione o tipo" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Supervisão Clínica">Supervisão Clínica</SelectItem>
-                          <SelectItem value="Palestra">Palestra</SelectItem>
-                          <SelectItem value="Grupo de Estudo">Grupo de Estudo</SelectItem>
-                          <SelectItem value="Workshop">Workshop</SelectItem>
+                          {eventTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -547,22 +665,51 @@ export default function AdminEventsPage() {
                   control={form.control}
                   name="event_date"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Data do Evento</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP", { locale: ptBR })
+                              ) : (
+                                <span>Selecione uma data</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            locale={ptBR}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="start_time"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Hora de Início *</FormLabel>
+                      <FormLabel>Horário de Início</FormLabel>
                       <FormControl>
                         <Input type="time" {...field} />
                       </FormControl>
@@ -576,7 +723,7 @@ export default function AdminEventsPage() {
                   name="end_time"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Hora de Término *</FormLabel>
+                      <FormLabel>Horário de Término</FormLabel>
                       <FormControl>
                         <Input type="time" {...field} />
                       </FormControl>
@@ -584,123 +731,67 @@ export default function AdminEventsPage() {
                     </FormItem>
                   )}
                 />
-                
-                <div className="md:col-span-2">
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descrição *</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Descreva o evento" 
-                            rows={4}
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="meeting_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Link da Reunião</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://meet.google.com/..." {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Link para a videoconferência (opcional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="certificate_template"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Template de Certificado</FormLabel>
-                      <FormControl>
-                        <Input placeholder="URL do template" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        URL do template de certificado (opcional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
               
-              <DialogFooter className="gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline"
+              <FormField
+                control={form.control}
+                name="meeting_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL da Reunião (opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Link para a videochamada (Zoom, Meet, etc.)" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Para eventos online, insira o link da reunião
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="certificate_template"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Template de Certificado (opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="URL do template de certificado" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      URL para o template de certificado a ser emitido para os participantes
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline" 
                   onClick={() => {
-                    setIsAddDialogOpen(false);
-                    setEditingEvent(null);
+                    setIsDialogOpen(false);
                     form.reset();
                   }}
                 >
                   Cancelar
                 </Button>
-                <Button 
-                  type="submit"
-                  className="bg-primary"
-                  disabled={createEventMutation.isPending || updateEventMutation.isPending}
-                >
-                  {(createEventMutation.isPending || updateEventMutation.isPending) && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {editingEvent ? "Salvar Alterações" : "Criar Evento"}
+                <Button type="submit">
+                  {isEditMode ? "Salvar Alterações" : "Criar Evento"}
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
-            <DialogDescription>
-              Você está prestes a excluir o evento <span className="font-semibold">{eventToDelete?.title}</span>. 
-              Esta ação não pode ser desfeita e excluirá todos os dados relacionados a este evento.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setIsDeleteDialogOpen(false);
-                setEventToDelete(null);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteEvent}
-              disabled={deleteEventMutation.isPending}
-            >
-              {deleteEventMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Excluir Evento
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </AdminShell>
   );
 }

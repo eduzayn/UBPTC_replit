@@ -1,0 +1,227 @@
+Estrutura do Backend (APIs RESTful) para UBPCT
+1. Tecnologias e Arquitetura
+Node.js + Express para criação das APIs REST.
+
+Banco de Dados: Neon (PostgreSQL serverless).
+
+Autenticação: JWT (JSON Web Tokens) para segurança das rotas.
+
+Upload de arquivos: Multer para ebooks e certificados.
+
+Integração: Webhook e API do Asaas para pagamentos.
+
+QR Code: Biblioteca para geração dinâmica de QR Codes.
+
+2. Organização Geral das Rotas
+Módulo	Endpoint Base	Métodos Principais	Descrição
+Auth	/api/auth	POST /login, POST /register	Autenticação e registro de usuários
+Associados	/api/associados	GET, POST, PUT, DELETE	CRUD de associados
+Credenciais	/api/credenciais	GET, POST	Gestão de credenciais e QR Codes
+Pagamentos	/api/pagamentos	GET, POST	Registro e consulta de pagamentos
+Ebooks	/api/ebooks	GET, POST, DELETE	Upload, listagem e exclusão de ebooks
+Eventos	/api/eventos	GET, POST, PUT, DELETE	Gestão de eventos e inscrições
+Inscricoes	/api/inscricoes	GET, POST, PUT	Inscrição e controle de presença
+Certificados	/api/certificados	GET, POST	Emissão e consulta de certificados
+Convenios	/api/convenios	GET, POST, PUT, DELETE	Gestão de convênios e benefícios
+Webhook Asaas	/api/webhook/asaas	POST	Recebimento de notificações de pagamento
+Validacao	/api/validacao	GET	Validação pública de credenciais via QR Code
+3. Detalhamento dos Endpoints
+3.1 Autenticação (/api/auth)
+POST /register
+Cadastro de novo associado (com validação de dados).
+
+POST /login
+Login, retorno de token JWT.
+
+POST /refresh-token (opcional)
+Renovação do token JWT.
+
+3.2 Associados (/api/associados)
+GET /
+Lista associados (com filtros, paginação).
+
+GET /:id
+Detalhes do associado.
+
+POST /
+Criar novo associado (admin).
+
+PUT /:id
+Atualizar dados do associado.
+
+DELETE /:id
+Remover associado (admin).
+
+GET /me
+Dados do associado autenticado.
+
+3.3 Credenciais (/api/credenciais)
+GET /:associadoId
+Obter credencial e QR Code do associado.
+
+POST /
+Gerar/atualizar credencial (admin).
+
+GET /validar/:numero_credencial (público)
+Validar credencial via QR Code.
+
+3.4 Pagamentos (/api/pagamentos)
+GET /:associadoId
+Histórico de pagamentos do associado.
+
+POST /
+Registrar pagamento manual (admin).
+
+POST /asaas-link
+Gerar link de pagamento via Asaas (assinatura mensal/anual).
+
+POST /webhook
+Receber notificações do Asaas para atualizar status.
+
+3.5 Ebooks (/api/ebooks)
+GET /
+Listar ebooks disponíveis (com filtros).
+
+POST /
+Upload de ebook (admin).
+
+DELETE /:id
+Excluir ebook (admin).
+
+3.6 Eventos (/api/eventos)
+GET /
+Listar eventos futuros e passados.
+
+GET /:id
+Detalhes do evento.
+
+POST /
+Criar evento (admin).
+
+PUT /:id
+Atualizar evento (admin).
+
+DELETE /:id
+Excluir evento (admin).
+
+3.7 Inscrições (/api/inscricoes)
+GET /evento/:eventoId
+Listar inscritos no evento.
+
+POST /
+Inscrever associado em evento.
+
+PUT /:id
+Confirmar presença e emitir certificado.
+
+3.8 Certificados (/api/certificados)
+GET /:associadoId
+Listar certificados do associado.
+
+POST /
+Gerar certificado (admin ou automático).
+
+3.9 Convênios (/api/convenios)
+GET /
+Listar convênios ativos.
+
+POST /
+Criar convênio (admin).
+
+PUT /:id
+Atualizar convênio (admin).
+
+DELETE /:id
+Remover convênio (admin).
+
+3.10 Webhook Asaas (/api/webhook/asaas)
+POST /
+Recebe notificações de pagamento, atualiza status da assinatura do associado.
+
+3.11 Validação de Credenciais (/api/validacao)
+GET /:numero_credencial
+Retorna dados públicos da credencial para validação via QR Code.
+
+4. Fluxo de Autenticação e Segurança
+Usuário realiza login → recebe JWT → usa token para acessar rotas protegidas.
+
+Rotas administrativas restritas a perfis com permissão.
+
+Validação de dados e tratamento de erros em todas as rotas.
+
+HTTPS obrigatório em produção.
+
+5. Uploads e Armazenamento
+Arquivos (ebooks, certificados) armazenados em serviço externo (ex: AWS S3, Google Cloud Storage).
+
+Backend gerencia upload via Multer e armazena URLs no banco.
+
+6. Integração com Asaas
+Uso do link pronto para assinatura mensal/anual.
+
+Webhook para atualizar status financeiro do associado em tempo real.
+
+Aplicação automática de descontos conforme tipo de pagamento.
+
+7. Geração de QR Code
+Endpoint que gera QR Code dinâmico para cada credencial.
+
+QR Code aponta para endpoint público de validação.
+
+8. Exemplo de Estrutura de Pastas Backend
+text
+/backend
+  /controllers
+    authController.js
+    associadosController.js
+    credenciaisController.js
+    pagamentosController.js
+    ebooksController.js
+    eventosController.js
+    inscricoesController.js
+    certificadosController.js
+    conveniosController.js
+    webhookController.js
+    validacaoController.js
+  /models
+    associado.js
+    credencial.js
+    pagamento.js
+    ebook.js
+    evento.js
+    inscricao.js
+    certificado.js
+    convenio.js
+  /routes
+    authRoutes.js
+    associadosRoutes.js
+    credenciaisRoutes.js
+    pagamentosRoutes.js
+    ebooksRoutes.js
+    eventosRoutes.js
+    inscricoesRoutes.js
+    certificadosRoutes.js
+    conveniosRoutes.js
+    webhookRoutes.js
+    validacaoRoutes.js
+  /middlewares
+    authMiddleware.js
+    errorMiddleware.js
+  /utils
+    asaasService.js
+    qrCodeGenerator.js
+    emailService.js
+  app.js
+  server.js
+  .env
+Se desejar, posso ajudar a gerar exemplos de código para cada módulo, documentação Swagger, ou scripts SQL para criação das tabelas. Quer que eu faça?
+
+Escreva a estrutura de toas as páginas públicas do site principal com o botãao de login
+Escreva a estrutura de toas as páginas públicas do site principal com o botãao de login
+
+Resposta
+
+Fontes
+1
+Uniao-Brasileira-De-Psicanalise-1.jpg
+Claro! A seguir está a estrutura sugerida para todas as páginas públicas do site principal da União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT), incluindo o botão de login para acesso ao portal do associado.
