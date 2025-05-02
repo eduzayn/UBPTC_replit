@@ -3,6 +3,12 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    
+    // Tratamento especial para erro de pagamento (403 com mensagem específica)
+    if (res.status === 403 && text.includes("pagamento")) {
+      throw new Error(`Pagamento pendente: É necessário regularizar sua assinatura para acessar este recurso.`);
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }

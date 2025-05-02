@@ -62,35 +62,7 @@ export function ProtectedRoute({
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : needsToRenew ? (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-8 max-w-md w-full text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Assinatura Inativa</h2>
-            <p className="text-gray-600 mb-6">
-              Sua assinatura expirou ou está pendente de pagamento. Por favor, renove sua assinatura para continuar acessando os recursos exclusivos.
-            </p>
-            
-            <div className="grid gap-3">
-              <a href={getPaymentLink("monthly")} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Renovar Assinatura Mensal
-                </Button>
-              </a>
-              
-              <a href={getPaymentLink("annual")} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full bg-primary/80 hover:bg-primary">
-                  Renovar Assinatura Anual (Economize 20%)
-                </Button>
-              </a>
-              
-              <Link href="/">
-                <Button variant="outline" className="w-full">
-                  Voltar para a Home
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
+        <Redirect to="/payment-required" />
       ) : (
         <Component />
       )}

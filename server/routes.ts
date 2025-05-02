@@ -45,7 +45,7 @@ const hasActiveSubscription = async (req: any, res: any, next: any) => {
     
     if (status !== 'active') {
       return res.status(403).json({ 
-        message: "Assinatura inativa", 
+        message: "Pagamento pendente: É necessário regularizar sua assinatura para acessar este recurso.", 
         code: "INACTIVE_SUBSCRIPTION" 
       });
     }
@@ -53,7 +53,11 @@ const hasActiveSubscription = async (req: any, res: any, next: any) => {
     next();
   } catch (error) {
     console.error("Error checking subscription:", error);
-    next();
+    // Por segurança, se ocorrer erro ao verificar a assinatura, bloqueamos o acesso
+    return res.status(403).json({ 
+      message: "Erro ao verificar status do pagamento. Entre em contato com o suporte.", 
+      code: "SUBSCRIPTION_CHECK_ERROR" 
+    });
   }
 };
 
@@ -336,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Benefits routes
-  app.get("/api/benefits", isAuthenticated, async (req, res) => {
+  app.get("/api/benefits", isAuthenticated, hasActiveSubscription, async (req, res) => {
     try {
       const benefits = await storage.getAllBenefits();
       res.json(benefits);
