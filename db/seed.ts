@@ -6,12 +6,12 @@ async function seed() {
   try {
     console.log("Seeding database...");
 
-    // Create admin user
-    const adminExists = await db.query.users.findFirst({
+    // Create admin users
+    const defaultAdminExists = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.email, "admin@ubpct.com.br")
     });
 
-    if (!adminExists) {
+    if (!defaultAdminExists) {
       const adminPassword = await hashPassword("admin123");
       await db.insert(schema.users).values({
         name: "Admin UBPCT",
@@ -24,7 +24,28 @@ async function seed() {
         role: "admin",
         subscription_status: "active"
       });
-      console.log("Admin user created");
+      console.log("Default admin user created");
+    }
+    
+    // Create test admin user
+    const testAdminExists = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.email, "teste@ubpct.com.br")
+    });
+
+    if (!testAdminExists) {
+      const testAdminPassword = await hashPassword("teste123");
+      await db.insert(schema.users).values({
+        name: "Administrador de Teste",
+        email: "teste@ubpct.com.br",
+        password: testAdminPassword,
+        phone: "11988888888",
+        cpf: "98765432109",
+        occupation: "administrador de teste",
+        graduated: true,
+        role: "admin",
+        subscription_status: "active"
+      });
+      console.log("Test admin user created");
     }
 
     // Seed ebooks
