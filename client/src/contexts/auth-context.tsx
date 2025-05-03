@@ -29,7 +29,7 @@ type RegisterData = {
   phone?: string;
   cpf?: string;
   occupation?: string;
-  graduated?: string;
+  graduated?: boolean;
   terms_accepted?: boolean;
   plan?: "monthly" | "annual";
 };

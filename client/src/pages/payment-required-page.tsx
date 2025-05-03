@@ -26,6 +26,12 @@ export default function PaymentRequiredPage() {
     // Se o usuário não estiver logado, redirecionar para a página de login
     if (!user) {
       setLocation("/auth");
+      return;
+    }
+    
+    // Se o usuário for administrador, redirecionar para o dashboard administrativo
+    if (user.role === "admin") {
+      setLocation("/admin");
     }
   }, [user, setLocation]);
 
