@@ -38,7 +38,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 // Tipos de eventos disponíveis
@@ -94,12 +94,14 @@ export default function AdminEventsPage() {
   // Consulta para obter eventos
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["/api/events"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
   // Consulta para obter registros de eventos
   const { data: registrations = [], isLoading: isLoadingRegistrations } = useQuery({
     queryKey: ["/api/events/registrations"],
+    queryFn: getQueryFn(),
     retry: false,
     enabled: activeTab === "attendees"
   });
