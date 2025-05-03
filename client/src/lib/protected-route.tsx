@@ -53,7 +53,10 @@ export function ProtectedRoute({
 
   // Payment status check
   const isPaymentValid = paymentStatus?.status === "adimplente";
-  const needsToRenew = !isCheckingPayment && user && !isPaymentValid;
+  
+  // Administradores não precisam de assinatura ativa
+  const isAdmin = user?.role === "admin";
+  const needsToRenew = !isCheckingPayment && user && !isPaymentValid && !isAdmin;
 
   return (
     <Route path={path}>

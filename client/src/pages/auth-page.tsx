@@ -121,10 +121,8 @@ export default function AuthPage() {
   };
   
   const onAdminLoginSubmit = (data: AdminLoginFormValues) => {
-    loginMutation.mutate({
-      ...data,
-      isAdmin: true
-    });
+    // Não é necessário enviar isAdmin, o backend verificará por role=admin
+    loginMutation.mutate(data);
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
