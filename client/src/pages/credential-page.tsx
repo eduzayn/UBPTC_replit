@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 import { AppShell } from "../components/ui/app-shell";
 import {
   Card,
@@ -38,6 +39,7 @@ export default function CredentialPage() {
     refetch
   } = useQuery({
     queryKey: ["/api/credentials/my"],
+    queryFn: getQueryFn(),
     enabled: !!user,
   });
 
@@ -46,6 +48,7 @@ export default function CredentialPage() {
     data: paymentStatus
   } = useQuery({
     queryKey: [`/api/payments/status/${user?.id}`],
+    queryFn: getQueryFn(),
     enabled: !!user,
   });
 
@@ -269,7 +272,7 @@ export default function CredentialPage() {
                 </Card>
                 
                 {!isActive && (
-                  <Alert variant="warning" className="bg-amber-50 border-amber-500">
+                  <Alert className="bg-amber-50 border-amber-500">
                     <AlertCircle className="h-4 w-4 text-amber-800" />
                     <AlertTitle>Credencial suspensa</AlertTitle>
                     <AlertDescription>
