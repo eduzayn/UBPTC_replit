@@ -41,47 +41,71 @@ function Router() {
   return (
     <Switch>
       {/* Admin Routes - Sem header e footer */}
-      <AdminRoute path="/admin" component={AdminDashboardPage} />
-      <AdminRoute path="/admin/members" component={AdminMembersPage} />
-      <AdminRoute path="/admin/ebooks" component={AdminEbooksPage} />
-      <AdminRoute path="/admin/events" component={AdminEventsPage} />
-      <AdminRoute path="/admin/finance" component={AdminFinancePage} />
-      <AdminRoute path="/admin/benefits" component={AdminBenefitsPage} />
-      <AdminRoute path="/admin/communication" component={AdminCommunicationPage} />
+      <Route path="/admin">
+        {matches => matches && <AdminRoute path="/admin" component={AdminDashboardPage} />}
+      </Route>
+      <Route path="/admin/members">
+        {matches => matches && <AdminRoute path="/admin/members" component={AdminMembersPage} />}
+      </Route>
+      <Route path="/admin/ebooks">
+        {matches => matches && <AdminRoute path="/admin/ebooks" component={AdminEbooksPage} />}
+      </Route>
+      <Route path="/admin/events">
+        {matches => matches && <AdminRoute path="/admin/events" component={AdminEventsPage} />}
+      </Route>
+      <Route path="/admin/finance">
+        {matches => matches && <AdminRoute path="/admin/finance" component={AdminFinancePage} />}
+      </Route>
+      <Route path="/admin/benefits">
+        {matches => matches && <AdminRoute path="/admin/benefits" component={AdminBenefitsPage} />}
+      </Route>
+      <Route path="/admin/communication">
+        {matches => matches && <AdminRoute path="/admin/communication" component={AdminCommunicationPage} />}
+      </Route>
       
       {/* Páginas públicas e protegidas - Com header e footer */}
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <Switch>
-            {/* Public Pages */}
-            <Route path="/" component={HomePage} />
-            <Route path="/auth" component={AuthPage} />
-            <Route path="/about" component={AboutPage} />
-            <Route path="/services" component={ServicesPage} />
-            <Route path="/events-public" component={EventsPublicPage} />
-            <Route path="/blog" component={BlogPage} />
-            <Route path="/contact" component={ContactPage} />
-            <Route path="/validate/:credentialId" component={ValidateCredentialPage} />
-            <Route path="/terms" component={TermsPage} />
-            <Route path="/privacy" component={PrivacyPage} />
-            <Route path="/payment-required" component={PaymentRequiredPage} />
-            
-            {/* Protected Pages */}
-            <ProtectedRoute path="/dashboard" component={DashboardPage} />
-            <ProtectedRoute path="/profile" component={ProfilePage} />
-            <ProtectedRoute path="/credential" component={CredentialPage} />
-            <ProtectedRoute path="/library" component={LibraryPage} />
-            <ProtectedRoute path="/events" component={EventsPage} />
-            <ProtectedRoute path="/certificates" component={CertificatesPage} />
-            <ProtectedRoute path="/benefits" component={BenefitsPage} />
-            
-            {/* Fallback to 404 */}
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-        <Footer />
-      </div>
+      <Route path="*">
+        {matches => {
+          // Verificar se a rota atual é uma rota admin
+          const isAdminRoute = window.location.pathname.startsWith('/admin');
+          if (isAdminRoute) return null;
+          
+          return (
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow">
+                <Switch>
+                  {/* Public Pages */}
+                  <Route path="/" component={HomePage} />
+                  <Route path="/auth" component={AuthPage} />
+                  <Route path="/about" component={AboutPage} />
+                  <Route path="/services" component={ServicesPage} />
+                  <Route path="/events-public" component={EventsPublicPage} />
+                  <Route path="/blog" component={BlogPage} />
+                  <Route path="/contact" component={ContactPage} />
+                  <Route path="/validate/:credentialId" component={ValidateCredentialPage} />
+                  <Route path="/terms" component={TermsPage} />
+                  <Route path="/privacy" component={PrivacyPage} />
+                  <Route path="/payment-required" component={PaymentRequiredPage} />
+                  
+                  {/* Protected Pages */}
+                  <ProtectedRoute path="/dashboard" component={DashboardPage} />
+                  <ProtectedRoute path="/profile" component={ProfilePage} />
+                  <ProtectedRoute path="/credential" component={CredentialPage} />
+                  <ProtectedRoute path="/library" component={LibraryPage} />
+                  <ProtectedRoute path="/events" component={EventsPage} />
+                  <ProtectedRoute path="/certificates" component={CertificatesPage} />
+                  <ProtectedRoute path="/benefits" component={BenefitsPage} />
+                  
+                  {/* Fallback to 404 */}
+                  <Route component={NotFound} />
+                </Switch>
+              </main>
+              <Footer />
+            </div>
+          );
+        }}
+      </Route>
     </Switch>
   );
 }
