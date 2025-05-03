@@ -3,6 +3,7 @@ import { Calendar, Clock, Video, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 
 interface Event {
   id: number;
@@ -47,13 +48,7 @@ function EventCard({ event }: { event: Event }) {
 export default function EventsSection() {
   const { data: events, isLoading, error } = useQuery<Event[]>({
     queryKey: ['/api/events/upcoming'],
-    queryFn: async () => {
-      const response = await fetch('/api/events/upcoming');
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-      return response.json();
-    },
+    queryFn: getQueryFn(),
   });
 
   // Fallback events if API request fails or is loading
