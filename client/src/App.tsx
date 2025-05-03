@@ -63,48 +63,179 @@ function Router() {
         {matches => matches && <AdminRoute path="/admin/communication" component={AdminCommunicationPage} />}
       </Route>
       
-      {/* Páginas públicas e protegidas - Com header e footer */}
-      <Route path="*">
-        {matches => {
-          // Verificar se a rota atual é uma rota admin
-          const isAdminRoute = window.location.pathname.startsWith('/admin');
-          if (isAdminRoute) return null;
-          
-          return (
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-grow">
-                <Switch>
-                  {/* Public Pages */}
-                  <Route path="/" component={HomePage} />
-                  <Route path="/auth" component={AuthPage} />
-                  <Route path="/about" component={AboutPage} />
-                  <Route path="/services" component={ServicesPage} />
-                  <Route path="/events-public" component={EventsPublicPage} />
-                  <Route path="/blog" component={BlogPage} />
-                  <Route path="/contact" component={ContactPage} />
-                  <Route path="/validate/:credentialId" component={ValidateCredentialPage} />
-                  <Route path="/terms" component={TermsPage} />
-                  <Route path="/privacy" component={PrivacyPage} />
-                  <Route path="/payment-required" component={PaymentRequiredPage} />
-                  
-                  {/* Protected Pages */}
-                  <ProtectedRoute path="/dashboard" component={DashboardPage} />
-                  <ProtectedRoute path="/profile" component={ProfilePage} />
-                  <ProtectedRoute path="/credential" component={CredentialPage} />
-                  <ProtectedRoute path="/library" component={LibraryPage} />
-                  <ProtectedRoute path="/events" component={EventsPage} />
-                  <ProtectedRoute path="/certificates" component={CertificatesPage} />
-                  <ProtectedRoute path="/benefits" component={BenefitsPage} />
-                  
-                  {/* Fallback to 404 */}
-                  <Route component={NotFound} />
-                </Switch>
-              </main>
-              <Footer />
-            </div>
-          );
-        }}
+      {/* Páginas Públicas - Com header e footer */}
+      <Route path="/">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <HomePage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/auth">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <AuthPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/about">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <AboutPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/services">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <ServicesPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/events-public">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <EventsPublicPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/blog">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <BlogPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/contact">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <ContactPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/validate/:credentialId">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <ValidateCredentialPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/terms">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <TermsPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/privacy">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <PrivacyPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      <Route path="/payment-required">
+        {matches => matches && (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <PaymentRequiredPage />
+            </main>
+            <Footer />
+          </div>
+        )}
+      </Route>
+      
+      {/* Protected Pages */}
+      <Route path="/dashboard">
+        {matches => matches && <ProtectedRoute path="/dashboard" component={DashboardPage} />}
+      </Route>
+      
+      <Route path="/profile">
+        {matches => matches && <ProtectedRoute path="/profile" component={ProfilePage} />}
+      </Route>
+      
+      <Route path="/credential">
+        {matches => matches && <ProtectedRoute path="/credential" component={CredentialPage} />}
+      </Route>
+      
+      <Route path="/library">
+        {matches => matches && <ProtectedRoute path="/library" component={LibraryPage} />}
+      </Route>
+      
+      <Route path="/events">
+        {matches => matches && <ProtectedRoute path="/events" component={EventsPage} />}
+      </Route>
+      
+      <Route path="/certificates">
+        {matches => matches && <ProtectedRoute path="/certificates" component={CertificatesPage} />}
+      </Route>
+      
+      <Route path="/benefits">
+        {matches => matches && <ProtectedRoute path="/benefits" component={BenefitsPage} />}
+      </Route>
+      
+      {/* Fallback to 404 */}
+      <Route>
+        {() => (
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <NotFound />
+            </main>
+            <Footer />
+          </div>
+        )}
       </Route>
     </Switch>
   );

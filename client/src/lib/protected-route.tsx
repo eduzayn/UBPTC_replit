@@ -58,6 +58,8 @@ export function ProtectedRoute({
   const isAdmin = user?.role === "admin";
   const needsToRenew = !isCheckingPayment && user && !isPaymentValid && !isAdmin;
 
+  // Renderizamos diretamente o componente, sem cabeçalho e rodapé
+  // AppShell dentro do componente vai lidar com o layout
   return (
     <Route path={path}>
       {isLoading || isCheckingPayment ? (
@@ -67,7 +69,9 @@ export function ProtectedRoute({
       ) : needsToRenew ? (
         <Redirect to="/payment-required" />
       ) : (
-        <Component />
+        <div className="min-h-screen">
+          <Component />
+        </div>
       )}
     </Route>
   );
