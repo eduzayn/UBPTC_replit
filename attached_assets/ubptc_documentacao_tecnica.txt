@@ -1,0 +1,1035 @@
+Associação de Profissionais de Saúde Mental
+
+---
+
+## Sumário
+
+1. Introdução  
+2. Tecnologias Utilizadas  
+3. Configuração Inicial do Projeto  
+4. Configuração do Banco de Dados Neon  
+5. Desenvolvimento do Backend (API)  
+6. Desenvolvimento do Frontend (React + Vite)  
+7. Integração com Asaas  
+8. Testes e Deploy  
+9. Considerações Finais  
+
+---
+
+## 1. Introdução
+
+Este documento descreve o passo a passo para o desenvolvimento de um sistema completo de gestão para uma associação de profissionais de saúde mental, utilizando as tecnologias React, Vite para o frontend, Neon (PostgreSQL serverless) para banco de dados e integração financeira com a plataforma Asaas.
+
+---
+
+## 2. Tecnologias Utilizadas
+
+- **Frontend:** React + Vite  
+- **Backend:** Node.js + Express  
+- **Banco de Dados:** Neon (PostgreSQL serverless)  
+- **Integração Financeira:** Asaas (API de pagamentos e cobranças)  
+- **Ambiente de Desenvolvimento:** Replit  
+
+---
+
+## 3. Configuração Inicial do Projeto
+
+### 3.1 Criar o Projeto React com Vite
+
+No terminal do Replit, execute:
+
+```bash
+npm create vite@latest nome-do-projeto -- --template react
+cd nome-do-projeto
+npm install
+npm run dev
+```
+
+Isso criará a base do frontend com React e Vite, com servidor de desenvolvimento rodando.
+
+---
+
+## 4. Configuração do Banco de Dados Neon
+
+### 4.1 Criar Conta e Banco no Neon
+
+- Acesse [Neon](https://neon.tech/) e crie uma conta.  
+- Crie um novo banco de dados PostgreSQL serverless.  
+
+### 4.2 Obter a String de Conexão
+
+- Copie a string de conexão (DATABASE_URL) para uso no backend.  
+
+### 4.3 Criar Tabelas no Banco
+
+Exemplo para tabela de associados:
+
+```sql
+CREATE TABLE associados (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  telefone VARCHAR(20),
+  data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 5. Desenvolvimento do Backend (API)
+
+### 5.1 Configurar Backend Node.js com Express
+
+No diretório do backend, instale dependências:
+
+```bash
+npm install express pg cors dotenv
+```
+
+### 5.2 Configurar Variáveis de Ambiente
+
+No arquivo `.env`:
+
+```
+DATABASE_URL=postgresql://usuario:senha@endereco_neon:porta/banco
+ASAAS_API_KEY=seu_token_asaas_aqui
+```
+
+### 5.3 Conectar ao Banco Neon
+
+Exemplo básico de conexão:
+
+```javascript
+import pkg from "pg";
+import dotenv from "dotenv";
+
+dotenv.config();
+const { Pool } = pkg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+```
+
+### 5.4 Criar Endpoints para Associados
+
+```javascript
+import express from "express";
+import cors from "cors";
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get("/associados", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM associados");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/associados", async (req, res) => {
+  const { nome, email, telefone } = req.body;
+  try {
+    await pool.query(
+      "INSERT INTO associados (nome, email, telefone) VALUES ($1, $2, $3)",
+      [nome, email, telefone]
+    );
+    res.status(201).json({ message: "Associado criado" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+```
+
+---
+
+## 6. Desenvolvimento do Frontend (React + Vite)
+
+### 6.1 Listar Associados
+
+Exemplo básico no `src/App.jsx`:
+
+```javascript
+import { useEffect, useState } from "react";
+
+function App() {
+  const [associados, setAssociados] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/associados")
+      .then(res => res.json())
+      .then(data => setAssociados(data));
+  }, []);
+
+  return (
+    
+      Associados
+      
+        {associados.map(a => (
+          {a.nome} - {a.email}
+        ))}
+      
+    
+  );
+}
+
+export default App;
+```
+
+---
+
+## 7. Integração com Asaas
+
+### 7.1 Obter API Key do Asaas
+
+- Gere a Access Token na plataforma Asaas.
+
+### 7.2 Instalar SDK Asaas no Backend
+
+```bash
+npm install asaas
+```
+
+### 7.3 Criar Serviço para Asaas (`asaasService.js`)
+
+```javascript
+import { AsaasClient } from 'asaas';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const asaas = new AsaasClient(process.env.ASAAS_API_KEY);
+
+export async function criarCliente(nome, email, cpfCnpj, telefone) {
+  return await asaas.customers.create({ name: nome, email, cpfCnpj, phone: telefone });
+}
+
+export async function criarCobranca(customerId, valor, descricao, vencimento) {
+  return await asaas.payments.create({
+    customer: customerId,
+    billingType: "BOLETO",
+    value: valor,
+    dueDate: vencimento,
+    description: descricao
+  });
+}
+```
+
+### 7.4 Criar Endpoints no Backend para Asaas
+
+```javascript
+app.post('/asaas/clientes', async (req, res) => {
+  try {
+    const { nome, email, cpfCnpj, telefone } = req.body;
+    const cliente = await criarCliente(nome, email, cpfCnpj, telefone);
+    res.status(201).json(cliente);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/asaas/cobrancas', async (req, res) => {
+  try {
+    const { customerId, valor, descricao, vencimento } = req.body;
+    const cobranca = await criarCobranca(customerId, valor, descricao, vencimento);
+    res.status(201).json(cobranca);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+```
+
+### 7.5 Consumir API Asaas no Frontend
+
+Exemplo de formulário para criar cliente:
+
+```javascript
+import { useState } from "react";
+
+function CriarCliente() {
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [mensagem, setMensagem] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:3001/asaas/clientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, email, cpfCnpj, telefone }),
+      });
+      if (res.ok) {
+        setMensagem("Cliente criado com sucesso!");
+      } else {
+        const err = await res.json();
+        setMensagem("Erro: " + err.error);
+      }
+    } catch (error) {
+      setMensagem("Erro na conexão: " + error.message);
+    }
+  }
+
+  return (
+    
+       setNome(e.target.value)} required />
+       setEmail(e.target.value)} required />
+       setCpfCnpj(e.target.value)} required />
+       setTelefone(e.target.value)} />
+      Criar Cliente
+      {mensagem}
+    
+  );
+}
+
+export default CriarCliente;
+```
+
+---
+
+## 8. Testes e Deploy
+
+- Teste todas as funcionalidades localmente no Replit.  
+- Configure variáveis de ambiente no Replit para `DATABASE_URL` e `ASAAS_API_KEY`.  
+- Para deploy, considere serviços que suportem Node.js e React, como Vercel, Netlify (frontend) e Heroku, Railway ou o próprio Replit (backend).
+
+---
+
+## 9. Considerações Finais
+
+- Garanta a segurança dos dados, especialmente pessoais e financeiros, implementando autenticação e criptografia.  
+- Atente-se à LGPD para proteção de dados dos associados.  
+- Expanda o sistema com funcionalidades adicionais como gestão de eventos, relatórios e comunicação integrada.  
+- Utilize webhooks do Asaas para atualizar automaticamente o status dos pagamentos.  
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+Claro! Abaixo segue o **plano de desenvolvimento atualizado** para o sistema da **União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT)**, considerando todas as novas solicitações e funcionalidades estratégicas para uma associação 100% virtual, moderna e centrada no desenvolvimento dos profissionais de saúde mental.
+
+---
+
+# Plano de Desenvolvimento do Sistema UBPCT
+
+---
+
+## 1. Identidade Visual e Proposta de Design
+
+**Base:**  
+- Utilização do logotipo oficial (imagem enviada), com predominância das cores preto, branco e azul claro.
+- Layout moderno, clean, responsivo (mobile first), com tipografia contemporânea (ex: Montserrat/Open Sans).
+- Elementos visuais que transmitam acolhimento, profissionalismo e inovação.
+
+---
+
+## 2. Estrutura do Site Principal
+
+### 2.1 Páginas Públicas
+
+- **Home:**  
+  Banner institucional, missão, diferenciais, chamada para associação, destaques de eventos e benefícios.
+- **Sobre Nós:**  
+  História, equipe, corpo diretivo, parceiros (ex: Faculdade Dynamus).
+- **Serviços:**  
+  Detalhamento dos serviços (supervisão, grupos de estudo, biblioteca, benefícios).
+- **Eventos:**  
+  Calendário de encontros semanais, palestras e supervisões (com links para inscrição/participação).
+- **Associe-se:**  
+  Explicação dos planos, benefícios, regras para certificados, formulário de cadastro, link para pagamento Asaas.
+- **Notícias/Blog:**  
+  Artigos, novidades, comunicados e conteúdo educativo.
+- **Convênios e Benefícios:**  
+  Listagem de empresas parceiras, descontos em consultas, medicamentos, etc.
+- **Contato:**  
+  Formulário, e-mail, telefone, redes sociais.
+
+---
+
+## 3. Portal do Associado (Área Restrita)
+
+### 3.1 Funcionalidades Principais
+
+- **Dashboard:**  
+  Resumo do status da assinatura, próximos eventos, notificações e novidades.
+- **Minha Credencial Digital:**  
+  - Exibição de credencial virtual personalizada conforme ocupação (ex: Psicanalista, Terapeuta, Estudante).
+  - QR Code dinâmico para validação online (verificação de autenticidade e situação do associado).
+  - Download da credencial em PDF.
+- **Biblioteca de Ebooks:**  
+  - Visualização e download de ebooks.
+  - Área administrativa para upload de novos ebooks (com categorias, busca e controle de acesso).
+- **Eventos e Supervisões:**  
+  - Inscrição e acesso a links de reuniões virtuais (Zoom, Meet, etc.).
+  - Agenda semanal de supervisão, grupos de estudo e palestras.
+  - Emissão de certificados de participação.
+- **Financeiro:**  
+  - Visualização do histórico de pagamentos.
+  - Link para regularização de pendências via Asaas.
+  - Informações sobre descontos para pagamentos anuais ou via cartão.
+- **Certificados:**  
+  - Acompanhamento do ciclo anual.
+  - Geração automática de certificado de formação livre (não graduados) ou pós-graduação (graduados) em parceria com a Faculdade Dynamus, para associados adimplentes por 12 meses.
+- **Benefícios e Convênios:**  
+  - Acesso a vouchers, cupons e orientações para usufruir dos benefícios de empresas parceiras.
+- **Perfil:**  
+  - Atualização de dados cadastrais e documentos comprobatórios.
+
+---
+
+## 4. Funcionalidades Administrativas
+
+- **Gestão de Associados:**  
+  Cadastro, edição, busca, exportação de dados, controle de adimplência.
+- **Gestão de Ebooks:**  
+  Upload, categorização, exclusão e atualização de materiais.
+- **Gestão de Eventos:**  
+  Criação, edição, controle de inscrições e emissão de certificados.
+- **Gestão Financeira:**  
+  Relatórios de pagamentos, inadimplência, controle de descontos.
+- **Gestão de Convênios:**  
+  Cadastro e atualização de benefícios e parceiros.
+- **Comunicação:**  
+  Envio de comunicados, notificações e lembretes automáticos.
+
+---
+
+## 5. Integração de Pagamento (Asaas)
+
+- **Adesão e Assinatura Mensal:**  
+  - Página “Associe-se” com link pronto do Asaas para assinatura mensal de R$ 69,90.
+  - Opção de pagamento anual ou via cartão com 20% de desconto.
+  - Webhook do Asaas para atualizar automaticamente o status do associado no sistema.
+  - Bloqueio automático de acesso à área restrita em caso de inadimplência.
+- **Gestão de Descontos:**  
+  - Aplicação automática do desconto para pagamentos anuais ou via cartão.
+  - Exibição clara das opções e valores para o usuário.
+
+---
+
+## 6. Certificação e Regras de Benefício
+
+- **Certificado de Formação Livre:**  
+  - Para não graduados, após 12 meses de adimplência, com emissão automática e validação pelo sistema.
+- **Certificado de Pós-Graduação:**  
+  - Para graduados, em parceria com a Faculdade Dynamus de Campinas, emitido ao final de cada ciclo anual.
+- **Controle de Elegibilidade:**  
+  - O sistema verifica automaticamente o tempo de associação e adimplência para liberar o certificado correto.
+
+---
+
+## 7. QR Code de Validação de Credencial
+
+### 7.1 Como Funciona
+
+- Cada credencial digital exibida no portal do associado terá um QR Code único.
+- Ao escanear, o QR Code direciona para uma página pública de validação, mostrando:
+  - Nome do associado
+  - Ocupação
+  - Status da associação (adimplente/inadimplente)
+  - Validade da credencial
+- O QR Code é gerado dinamicamente e atualizado em tempo real conforme o status do associado.
+
+### 7.2 Implementação
+
+- Uso de biblioteca como `qrcode` (Node.js) para gerar QR Codes.
+- Endpoint público de validação que recebe o ID do associado e retorna os dados em tempo real.
+- Layout da credencial com design profissional, incluindo logo, nome, ocupação, QR Code e validade.
+
+---
+
+## 8. Biblioteca de Ebooks
+
+- Área administrativa para upload de arquivos PDF/EPUB.
+- Categorização dos ebooks (ex: Psicanálise, Terapias, Desenvolvimento Pessoal).
+- Controle de acesso: apenas associados adimplentes podem baixar.
+- Busca e filtros por título, autor ou categoria.
+
+---
+
+## 9. Gestão de Eventos Virtuais
+
+- Cadastro de encontros semanais de supervisão, grupos de estudo e palestras.
+- Inscrição online, com envio automático de link para participação.
+- Controle de presença e emissão de certificados digitais de participação.
+- Possibilidade de integração com plataformas de videoconferência (Zoom, Google Meet).
+
+---
+
+## 10. Benefícios e Convênios
+
+- Página exclusiva para acesso a descontos em consultas médicas online, medicamentos e outros benefícios.
+- Gerenciamento de parcerias e cupons de desconto.
+- Atualização dinâmica das empresas conveniadas.
+
+---
+
+## 11. Fluxo do Usuário
+
+1. **Acesso ao site** → Explora informações públicas.
+2. **Associe-se** → Preenche cadastro e realiza pagamento via link Asaas.
+3. **Acesso ao portal** → Ganha acesso à credencial digital, biblioteca, eventos e benefícios.
+4. **Participa dos encontros** → Supervisão, grupos de estudo, palestras.
+5. **Mantém-se adimplente** → Após 12 meses, recebe certificado conforme perfil.
+6. **Utiliza benefícios** → Acesso a convênios e descontos exclusivos.
+
+---
+
+## 12. Tecnologias Sugeridas
+
+- **Frontend:** React + Vite, Material UI ou Chakra UI.
+- **Backend:** Node.js + Express, integração com Neon (Postgres serverless).
+- **Pagamentos:** Integração via link do Asaas e webhooks.
+- **QR Code:** Biblioteca `qrcode` para geração dinâmica.
+- **Uploads:** Biblioteca `multer` ou similar para upload de ebooks.
+- **Segurança:** JWT para autenticação, HTTPS, LGPD.
+- **Hospedagem:** Replit (desenvolvimento), Vercel/Netlify (frontend), Heroku/Railway (backend).
+
+---
+
+## 13. Considerações Finais
+
+O sistema da UBPCT será uma plataforma robusta, moderna e 100% virtual, promovendo o desenvolvimento contínuo dos profissionais da saúde mental, com foco em atualização, networking, acesso a conteúdo exclusivo e benefícios reais. A credencial digital com QR Code e o controle automatizado de certificados garantem segurança, transparência e praticidade para associados e parceiros.
+
+___________________________________________________________________________________________________________________________________
+
+Com base nas funcionalidades detalhadas para a **União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT)**, segue o **esquema de tabelas do banco de dados** (modelo relacional, ideal para PostgreSQL/Neon). Esse esquema cobre cadastro de associados, pagamentos, credenciais, ebooks, eventos, certificados, convênios e auditoria.
+
+---
+
+## Esquema de Tabelas do Banco de Dados UBPCT
+
+### 1. ASSOCIADOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| nome               | VARCHAR(120)        | NOT NULL                    | Nome completo                           |
+| email              | VARCHAR(120)        | NOT NULL, UNIQUE            | E-mail                                  |
+| senha_hash         | VARCHAR(255)        | NOT NULL                    | Hash da senha                           |
+| cpf_cnpj           | VARCHAR(20)         | NOT NULL, UNIQUE            | CPF ou CNPJ                             |
+| telefone           | VARCHAR(20)         |                             | Telefone                                |
+| ocupacao           | VARCHAR(80)         | NOT NULL                    | Ocupação (ex: Psicanalista, Terapeuta)  |
+| graduado           | BOOLEAN             | NOT NULL DEFAULT FALSE      | Graduado (sim/não)                      |
+| data_cadastro      | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de cadastro                        |
+| status             | VARCHAR(20)         | DEFAULT 'ativo'             | ativo, inativo, pendente, bloqueado     |
+| assinatura_status  | VARCHAR(20)         | DEFAULT 'pendente'          | adimplente, inadimplente, cancelada     |
+| assinatura_inicio  | DATE                |                             | Data início assinatura                  |
+| assinatura_fim     | DATE                |                             | Data fim assinatura                     |
+| link_asaas         | VARCHAR(255)        |                             | Link de pagamento Asaas                 |
+
+---
+
+### 2. CREDENCIAIS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| numero_credencial  | VARCHAR(30)         | UNIQUE                      | Número/ID da credencial                 |
+| ocupacao           | VARCHAR(80)         |                             | Ocupação exibida                        |
+| qr_code_url        | VARCHAR(255)        |                             | URL do QR Code                          |
+| validade           | DATE                |                             | Data de validade                        |
+| status             | VARCHAR(20)         | DEFAULT 'ativa'             | ativa, suspensa, expirada               |
+| data_emissao       | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de emissão                         |
+
+---
+
+### 3. PAGAMENTOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| valor              | NUMERIC(10,2)       | NOT NULL                    | Valor pago                              |
+| tipo_pagamento     | VARCHAR(20)         | NOT NULL                    | mensal, anual, cartão, pix, boleto      |
+| desconto           | NUMERIC(10,2)       |                             | Valor do desconto                       |
+| status             | VARCHAR(20)         | NOT NULL                    | pago, pendente, cancelado               |
+| data_pagamento     | TIMESTAMP           |                             | Data do pagamento                       |
+| asaas_payment_id   | VARCHAR(80)         |                             | ID do pagamento no Asaas                |
+| link_recibo        | VARCHAR(255)        |                             | URL do recibo/nota                      |
+
+---
+
+### 4. EBOOKS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| titulo             | VARCHAR(150)        | NOT NULL                    | Título do ebook                         |
+| autor              | VARCHAR(100)        |                             | Autor                                   |
+| categoria          | VARCHAR(80)         |                             | Categoria                               |
+| arquivo_url        | VARCHAR(255)        | NOT NULL                    | URL do arquivo                          |
+| data_upload        | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de upload                          |
+| uploaded_by        | INT                 | REFERENCES associados(id)   | Quem fez o upload (admin)               |
+
+---
+
+### 5. EVENTOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| titulo             | VARCHAR(120)        | NOT NULL                    | Título do evento                        |
+| descricao          | TEXT                |                             | Descrição detalhada                     |
+| tipo               | VARCHAR(50)         | NOT NULL                    | supervisao, grupo_estudo, palestra      |
+| data_inicio        | TIMESTAMP           | NOT NULL                    | Data/hora início                        |
+| data_fim           | TIMESTAMP           |                             | Data/hora fim                           |
+| link_reuniao       | VARCHAR(255)        |                             | Link da reunião virtual                 |
+| certificado        | BOOLEAN             | DEFAULT FALSE               | Gera certificado?                       |
+
+---
+
+### 6. INSCRICOES_EVENTO
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| evento_id          | INT                 | REFERENCES eventos(id)      | FK para evento                          |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| data_inscricao     | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data da inscrição                       |
+| presente           | BOOLEAN             | DEFAULT FALSE               | Presença confirmada                     |
+| certificado_emitido| BOOLEAN             | DEFAULT FALSE               | Já emitiu certificado?                  |
+
+---
+
+### 7. CERTIFICADOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| associado_id       | INT                 | REFERENCES associados(id)   | FK para associado                       |
+| tipo               | VARCHAR(50)         | NOT NULL                    | formacao_livre, pos_graduacao, evento   |
+| descricao          | VARCHAR(150)        |                             | Descrição do certificado                |
+| arquivo_url        | VARCHAR(255)        |                             | URL do certificado PDF                  |
+| data_emissao       | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data de emissão                         |
+| ciclo_anual        | INT                 |                             | Ciclo/ano de referência                 |
+
+---
+
+### 8. CONVENIOS
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| empresa            | VARCHAR(120)        | NOT NULL                    | Nome da empresa conveniada              |
+| tipo_beneficio     | VARCHAR(100)        |                             | Ex: desconto consulta, medicamento      |
+| descricao          | TEXT                |                             | Descrição do benefício                  |
+| contato            | VARCHAR(100)        |                             | E-mail/telefone/site                    |
+| ativo              | BOOLEAN             | DEFAULT TRUE                | Convenio ativo?                         |
+| data_inicio        | DATE                |                             | Início do convênio                      |
+| data_fim           | DATE                |                             | Fim do convênio (opcional)              |
+
+---
+
+### 9. AUDITORIA (Opcional, mas recomendado)
+
+| Campo              | Tipo                | Restrições                  | Descrição                               |
+|--------------------|---------------------|-----------------------------|-----------------------------------------|
+| id                 | SERIAL              | PRIMARY KEY                 | Identificador único                     |
+| tabela             | VARCHAR(50)         | NOT NULL                    | Nome da tabela afetada                  |
+| registro_id        | INT                 |                             | ID do registro alterado                 |
+| acao               | VARCHAR(20)         | NOT NULL                    | insert, update, delete                  |
+| usuario_id         | INT                 | REFERENCES associados(id)   | Usuário/admin que realizou a ação       |
+| data_acao          | TIMESTAMP           | DEFAULT CURRENT_TIMESTAMP   | Data/hora da ação                       |
+| detalhes           | TEXT                |                             | Detalhes da alteração                   |
+
+---
+
+## RELACIONAMENTOS IMPORTANTES
+
+- **ASSOCIADOS** 1:N **CREDENCIAIS**
+- **ASSOCIADOS** 1:N **PAGAMENTOS**
+- **ASSOCIADOS** N:M **EVENTOS** (via INSCRICOES_EVENTO)
+- **ASSOCIADOS** 1:N **CERTIFICADOS**
+- **ASSOCIADOS** N:M **EBOOKS** (caso queira registrar downloads)
+- **EVENTOS** 1:N **INSCRICOES_EVENTO**
+- **ASSOCIADOS** N:M **CONVENIOS** (caso queira registrar uso de benefícios)
+
+---
+
+## OBSERVAÇÕES
+
+- Todos os uploads (ebooks, certificados) devem ser armazenados em serviço seguro (ex: S3, Google Cloud Storage) e o banco guarda apenas a URL.
+- O QR Code da credencial pode ser um link para endpoint `/validar-credencial/:numero_credencial`.
+- O status de adimplência é atualizado automaticamente via webhook do Asaas.
+- O ciclo anual para certificados deve ser controlado via campo `ciclo_anual` e datas de pagamento.
+
+_________________________________________________________________________________________________________________________________________
+
+Claro! Abaixo está uma proposta completa da **estrutura do backend (APIs RESTful)** para o sistema da **União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT)**, considerando as funcionalidades, tabelas e integrações que discutimos.
+
+---
+
+# Estrutura do Backend (APIs RESTful) para UBPCT
+
+---
+
+## 1. Tecnologias e Arquitetura
+
+- **Node.js + Express** para criação das APIs REST.  
+- **Banco de Dados:** Neon (PostgreSQL serverless).  
+- **Autenticação:** JWT (JSON Web Tokens) para segurança das rotas.  
+- **Upload de arquivos:** Multer para ebooks e certificados.  
+- **Integração:** Webhook e API do Asaas para pagamentos.  
+- **QR Code:** Biblioteca para geração dinâmica de QR Codes.
+
+---
+
+## 2. Organização Geral das Rotas
+
+| Módulo             | Endpoint Base           | Métodos Principais               | Descrição                                  |
+|--------------------|------------------------|---------------------------------|--------------------------------------------|
+| **Auth**           | /api/auth               | POST /login, POST /register     | Autenticação e registro de usuários        |
+| **Associados**      | /api/associados         | GET, POST, PUT, DELETE          | CRUD de associados                          |
+| **Credenciais**     | /api/credenciais        | GET, POST                      | Gestão de credenciais e QR Codes            |
+| **Pagamentos**      | /api/pagamentos         | GET, POST                      | Registro e consulta de pagamentos           |
+| **Ebooks**          | /api/ebooks             | GET, POST, DELETE              | Upload, listagem e exclusão de ebooks       |
+| **Eventos**         | /api/eventos            | GET, POST, PUT, DELETE         | Gestão de eventos e inscrições              |
+| **Inscricoes**      | /api/inscricoes         | GET, POST, PUT                 | Inscrição e controle de presença            |
+| **Certificados**    | /api/certificados       | GET, POST                     | Emissão e consulta de certificados          |
+| **Convenios**       | /api/convenios          | GET, POST, PUT, DELETE         | Gestão de convênios e benefícios             |
+| **Webhook Asaas**   | /api/webhook/asaas      | POST                          | Recebimento de notificações de pagamento    |
+| **Validacao**       | /api/validacao          | GET                           | Validação pública de credenciais via QR Code|
+
+---
+
+## 3. Detalhamento dos Endpoints
+
+### 3.1 Autenticação (/api/auth)
+
+- **POST /register**  
+  Cadastro de novo associado (com validação de dados).  
+- **POST /login**  
+  Login, retorno de token JWT.  
+- **POST /refresh-token** (opcional)  
+  Renovação do token JWT.
+
+---
+
+### 3.2 Associados (/api/associados)
+
+- **GET /**  
+  Lista associados (com filtros, paginação).  
+- **GET /:id**  
+  Detalhes do associado.  
+- **POST /**  
+  Criar novo associado (admin).  
+- **PUT /:id**  
+  Atualizar dados do associado.  
+- **DELETE /:id**  
+  Remover associado (admin).  
+- **GET /me**  
+  Dados do associado autenticado.
+
+---
+
+### 3.3 Credenciais (/api/credenciais)
+
+- **GET /:associadoId**  
+  Obter credencial e QR Code do associado.  
+- **POST /**  
+  Gerar/atualizar credencial (admin).  
+- **GET /validar/:numero_credencial** (público)  
+  Validar credencial via QR Code.
+
+---
+
+### 3.4 Pagamentos (/api/pagamentos)
+
+- **GET /:associadoId**  
+  Histórico de pagamentos do associado.  
+- **POST /**  
+  Registrar pagamento manual (admin).  
+- **POST /asaas-link**  
+  Gerar link de pagamento via Asaas (assinatura mensal/anual).  
+- **POST /webhook**  
+  Receber notificações do Asaas para atualizar status.
+
+---
+
+### 3.5 Ebooks (/api/ebooks)
+
+- **GET /**  
+  Listar ebooks disponíveis (com filtros).  
+- **POST /**  
+  Upload de ebook (admin).  
+- **DELETE /:id**  
+  Excluir ebook (admin).  
+
+---
+
+### 3.6 Eventos (/api/eventos)
+
+- **GET /**  
+  Listar eventos futuros e passados.  
+- **GET /:id**  
+  Detalhes do evento.  
+- **POST /**  
+  Criar evento (admin).  
+- **PUT /:id**  
+  Atualizar evento (admin).  
+- **DELETE /:id**  
+  Excluir evento (admin).  
+
+---
+
+### 3.7 Inscrições (/api/inscricoes)
+
+- **GET /evento/:eventoId**  
+  Listar inscritos no evento.  
+- **POST /**  
+  Inscrever associado em evento.  
+- **PUT /:id**  
+  Confirmar presença e emitir certificado.  
+
+---
+
+### 3.8 Certificados (/api/certificados)
+
+- **GET /:associadoId**  
+  Listar certificados do associado.  
+- **POST /**  
+  Gerar certificado (admin ou automático).  
+
+---
+
+### 3.9 Convênios (/api/convenios)
+
+- **GET /**  
+  Listar convênios ativos.  
+- **POST /**  
+  Criar convênio (admin).  
+- **PUT /:id**  
+  Atualizar convênio (admin).  
+- **DELETE /:id**  
+  Remover convênio (admin).  
+
+---
+
+### 3.10 Webhook Asaas (/api/webhook/asaas)
+
+- **POST /**  
+  Recebe notificações de pagamento, atualiza status da assinatura do associado.
+
+---
+
+### 3.11 Validação de Credenciais (/api/validacao)
+
+- **GET /:numero_credencial**  
+  Retorna dados públicos da credencial para validação via QR Code.
+
+---
+
+## 4. Fluxo de Autenticação e Segurança
+
+- Usuário realiza login → recebe JWT → usa token para acessar rotas protegidas.  
+- Rotas administrativas restritas a perfis com permissão.  
+- Validação de dados e tratamento de erros em todas as rotas.  
+- HTTPS obrigatório em produção.
+
+---
+
+## 5. Uploads e Armazenamento
+
+- Arquivos (ebooks, certificados) armazenados em serviço externo (ex: AWS S3, Google Cloud Storage).  
+- Backend gerencia upload via Multer e armazena URLs no banco.
+
+---
+
+## 6. Integração com Asaas
+
+- Uso do link pronto para assinatura mensal/anual.  
+- Webhook para atualizar status financeiro do associado em tempo real.  
+- Aplicação automática de descontos conforme tipo de pagamento.
+
+---
+
+## 7. Geração de QR Code
+
+- Endpoint que gera QR Code dinâmico para cada credencial.  
+- QR Code aponta para endpoint público de validação.
+
+---
+
+## 8. Exemplo de Estrutura de Pastas Backend
+
+```
+/backend
+  /controllers
+    authController.js
+    associadosController.js
+    credenciaisController.js
+    pagamentosController.js
+    ebooksController.js
+    eventosController.js
+    inscricoesController.js
+    certificadosController.js
+    conveniosController.js
+    webhookController.js
+    validacaoController.js
+  /models
+    associado.js
+    credencial.js
+    pagamento.js
+    ebook.js
+    evento.js
+    inscricao.js
+    certificado.js
+    convenio.js
+  /routes
+    authRoutes.js
+    associadosRoutes.js
+    credenciaisRoutes.js
+    pagamentosRoutes.js
+    ebooksRoutes.js
+    eventosRoutes.js
+    inscricoesRoutes.js
+    certificadosRoutes.js
+    conveniosRoutes.js
+    webhookRoutes.js
+    validacaoRoutes.js
+  /middlewares
+    authMiddleware.js
+    errorMiddleware.js
+  /utils
+    asaasService.js
+    qrCodeGenerator.js
+    emailService.js
+  app.js
+  server.js
+  .env
+```
+
+---
+
+_________________________________________________________________________________________________________________________________________
+
+Claro! A seguir está a estrutura sugerida para **todas as páginas públicas do site principal da União Brasileira de Psicanálise Clínica e Terapêutica (UBPCT)**, incluindo o botão de login para acesso ao portal do associado.
+
+---
+
+# Estrutura das Páginas Públicas do Site Principal da UBPCT
+
+---
+
+## 1. Cabeçalho (Header) - Comum a todas as páginas
+
+- Logo da UBPCT (conforme imagem enviada) no canto esquerdo.  
+- Menu de navegação horizontal com links para:  
+  - Home  
+  - Sobre Nós  
+  - Serviços  
+  - Eventos  
+  - Notícias  
+  - Convênios e Benefícios  
+  - Associe-se  
+  - Contato  
+- Botão destacado **“Login”** no canto direito, que direciona para a página de login do portal do associado.  
+- Menu responsivo para dispositivos móveis (hamburger menu).
+
+---
+
+## 2. Página Home
+
+- Banner principal com imagem institucional + slogan.  
+- Chamada para associação com botão CTA: **“Associe-se Agora”**.  
+- Destaques:  
+  - Missão e valores da UBPCT.  
+  - Benefícios para associados (credencial, biblioteca, eventos, descontos).  
+  - Próximos eventos e encontros virtuais.  
+- Depoimentos ou frases inspiradoras.  
+- Rodapé com informações de contato, redes sociais e links rápidos.
+
+---
+
+## 3. Sobre Nós
+
+- Texto institucional contando a história da UBPCT.  
+- Apresentação da equipe diretiva e corpo técnico.  
+- Parcerias institucionais (exemplo: Faculdade Dynamus).  
+- Fotos e vídeos institucionais (opcional).
+
+---
+
+## 4. Serviços
+
+- Descrição detalhada dos serviços oferecidos:  
+  - Supervisões semanais em psicanálise.  
+  - Grupos de estudos e palestras virtuais.  
+  - Biblioteca de ebooks.  
+  - Benefícios e convênios.  
+- Explicação do formato 100% virtual da associação.
+
+---
+
+## 5. Eventos
+
+- Calendário interativo com eventos futuros e passados.  
+- Filtros por tipo: supervisão, grupo de estudo, palestra.  
+- Detalhes de cada evento (data, horário, descrição, link para inscrição).  
+- Botão para inscrição e acesso ao evento (para associados).
+
+---
+
+## 6. Notícias / Blog
+
+- Listagem de artigos, notícias e comunicados recentes.  
+- Categorias para facilitar a navegação (ex: psicanálise, terapias, novidades).  
+- Artigos com imagens, texto e possibilidade de compartilhamento em redes sociais.
+
+---
+
+## 7. Convênios e Benefícios
+
+- Lista das empresas parceiras e tipos de benefícios (descontos em consultas, medicamentos, etc).  
+- Informações sobre como utilizar os benefícios.  
+- Atualizações e novidades sobre novos convênios.
+
+---
+
+## 8. Associe-se
+
+- Explicação clara dos planos e valores (R$ 69,90 mensal).  
+- Informações sobre descontos para pagamento anual ou cartão (20% off).  
+- Benefícios da associação (credencial, certificados, biblioteca, eventos, convênios).  
+- Formulário simplificado para cadastro inicial.  
+- Botão para redirecionar ao link de pagamento do Asaas para assinatura.  
+- FAQ com dúvidas frequentes.
+
+---
+
+## 9. Contato
+
+- Formulário para envio de mensagens (nome, email, telefone, assunto, mensagem).  
+- Informações de contato direto (telefone, email).  
+- Endereço físico (se houver).  
+- Links para redes sociais oficiais.
+
+---
+
+## 10. Rodapé (Footer) - Comum a todas as páginas
+
+- Links rápidos para as principais páginas.  
+- Informações legais e políticas de privacidade.  
+- Redes sociais da UBPCT.  
+- Copyright.
+
+---
+
+### Nota sobre o botão **Login**
+
+- O botão **Login** deve estar visível em todas as páginas no cabeçalho.  
+- Ao clicar, o usuário é levado para a página de login do sistema, onde pode acessar o portal do associado para gerenciar sua conta, credencial, biblioteca, eventos e pagamentos.
+
+__________________________________________________________________________________________________________________________________________
+
