@@ -560,7 +560,7 @@ export default function AdminCommunicationPage() {
                   <FormItem>
                     <FormLabel>Destinatários</FormLabel>
                     <Select 
-                      value={field.value} 
+                      value={field.value || "all"} 
                       onValueChange={field.onChange}
                     >
                       <FormControl>

@@ -421,7 +421,7 @@ export default function AdminEbooksPage() {
                       <FormLabel>Categoria</FormLabel>
                       <FormControl>
                         <Select 
-                          value={field.value} 
+                          value={field.value || ebookCategories[0]} 
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger>

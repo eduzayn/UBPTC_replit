@@ -437,7 +437,7 @@ export default function AdminBenefitsPage() {
                     <FormItem>
                       <FormLabel>Categoria</FormLabel>
                       <Select 
-                        value={field.value} 
+                        value={field.value || benefitCategories[0]} 
                         onValueChange={field.onChange}
                       >
                         <FormControl>
