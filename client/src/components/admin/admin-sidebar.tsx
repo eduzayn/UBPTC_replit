@@ -24,21 +24,20 @@ interface NavItemProps {
 
 function NavItem({ href, icon, title, active }: NavItemProps) {
   return (
-    <Link href={href}>
-      <a
-        className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
-          active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-        )}
-      >
-        {icon}
-        <span>{title}</span>
-        {active && (
-          <span className="ml-auto">
-            <ChevronRight className="h-4 w-4" />
-          </span>
-        )}
-      </a>
+    <Link 
+      href={href}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
+        active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+      )}
+    >
+      {icon}
+      <span>{title}</span>
+      {active && (
+        <span className="ml-auto">
+          <ChevronRight className="h-4 w-4" />
+        </span>
+      )}
     </Link>
   );
 }
