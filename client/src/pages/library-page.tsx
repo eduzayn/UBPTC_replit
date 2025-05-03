@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { AppShell } from "../components/ui/app-shell";
+import { MemberShell } from "../components/member/member-shell";
 import {
   Card,
   CardContent,
@@ -134,14 +134,11 @@ export default function LibraryPage() {
   if (!user) return null;
 
   return (
-    <AppShell>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Biblioteca Digital</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Acesse nossa biblioteca de e-books exclusivos para associados
-          </p>
-        </div>
+    <MemberShell title="Biblioteca Digital">
+      <div>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          Acesse nossa biblioteca de e-books exclusivos para associados
+        </p>
 
         {/* Search and Filter Section */}
         <Card className="mb-8">
@@ -399,6 +396,6 @@ export default function LibraryPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </MemberShell>
   );
 }
