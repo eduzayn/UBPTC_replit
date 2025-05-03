@@ -685,7 +685,7 @@ export default function AdminCommunicationPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Sem template</SelectItem>
+                          <SelectItem value="sem_template">Sem template</SelectItem>
                           {emailTemplates.map((template) => (
                             <SelectItem key={template.id} value={template.id}>
                               {template.name}
