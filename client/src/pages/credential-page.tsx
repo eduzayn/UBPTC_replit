@@ -37,7 +37,7 @@ export default function CredentialPage() {
     error,
     refetch
   } = useQuery({
-    queryKey: [`/api/credentials/user/${user?.id}`],
+    queryKey: ["/api/credentials/my"],
     enabled: !!user,
   });
 

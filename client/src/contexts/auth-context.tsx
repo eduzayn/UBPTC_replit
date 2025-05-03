@@ -32,6 +32,8 @@ type RegisterData = {
   graduated?: boolean;
   terms_accepted?: boolean;
   plan?: "monthly" | "annual";
+  role?: "member" | "admin";
+  subscription_status?: string;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
