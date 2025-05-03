@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { getQueryFn } from "@/lib/queryClient";
 import { AppShell } from "../components/ui/app-shell";
 import {
   Card,
@@ -39,7 +40,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 
 // Tipos
 type EventType = "supervisao" | "grupo_estudo" | "palestra" | "workshop";
