@@ -83,7 +83,7 @@ export default function Header() {
               </Link>
             ))}
 
-            <Link href="/#associe-se">
+            <Link href="/?anchor=associe-se">
               <Button className="font-montserrat bg-primary hover:bg-primary/90 text-white">
                 Associe-se
               </Button>
@@ -167,7 +167,7 @@ export default function Header() {
                   </Link>
                 ))}
                 
-                <Link href="/#associe-se">
+                <Link href="/?anchor=associe-se">
                   <Button 
                     className="font-montserrat bg-primary hover:bg-primary/90 text-white w-full"
                     onClick={() => setIsOpen(false)}

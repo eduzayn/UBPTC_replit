@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import HeroSection from "../components/home/hero-section";
 import BenefitsSection from "../components/home/benefits-section";
 import CredentialShowcase from "../components/home/credential-showcase";
@@ -9,6 +10,24 @@ import FAQSection from "../components/home/faq-section";
 import { Helmet } from "react-helmet";
 
 export default function HomePage() {
+  // Ref para a seção associe-se
+  const signupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Verificar se há um parâmetro de consulta 'anchor'
+    const params = new URLSearchParams(window.location.search);
+    const anchor = params.get('anchor');
+    
+    // Se o anchor for 'associe-se', rolar para a seção
+    if (anchor === 'associe-se' && signupRef.current) {
+      signupRef.current.scrollIntoView({ behavior: 'smooth' });
+      
+      // Limpar o parâmetro de consulta da URL para evitar problemas de navegação
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -21,7 +40,9 @@ export default function HomePage() {
       <CredentialShowcase />
       <EventsSection />
       <EbooksSection />
-      <SignupSection />
+      <div ref={signupRef}>
+        <SignupSection />
+      </div>
       <TestimonialsSection />
       <FAQSection />
     </>
