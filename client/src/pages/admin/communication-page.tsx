@@ -133,6 +133,9 @@ export default function AdminCommunicationPage() {
 
   // Selecionar um template de e-mail
   const handleSelectTemplate = (templateId: string) => {
+    // Se for o valor "sem_template", não fazemos nada
+    if (templateId === "sem_template") return;
+    
     const template = emailTemplates.find(t => t.id === templateId);
     
     if (!template) return;
@@ -673,7 +676,7 @@ export default function AdminCommunicationPage() {
                     <FormItem>
                       <FormLabel>Template (opcional)</FormLabel>
                       <Select
-                        value={field.value ?? ""}
+                        value={field.value ?? "sem_template"}
                         onValueChange={(value) => {
                           field.onChange(value);
                           handleSelectTemplate(value);
