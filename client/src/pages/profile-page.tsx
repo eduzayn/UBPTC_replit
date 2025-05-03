@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppShell } from "../components/ui/app-shell";
+import { MemberShell } from "../components/member/member-shell";
 import {
   Card,
   CardContent,
@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof personalData) => {
-      const response = await apiRequest("PATCH", `/api/users/${user?.id}`, data);
+      const response = await apiRequest("PUT", `/api/users/${user?.id}`, data);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Erro ao atualizar perfil");
@@ -52,7 +52,6 @@ export default function ProfilePage() {
       toast({
         title: "Perfil atualizado",
         description: "Seus dados foram atualizados com sucesso",
-        variant: "success",
       });
     },
     onError: (error: Error) => {
@@ -80,7 +79,6 @@ export default function ProfilePage() {
       toast({
         title: "Senha alterada",
         description: "Sua senha foi alterada com sucesso",
-        variant: "success",
       });
       setPasswordData({
         currentPassword: "",
@@ -134,14 +132,11 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <AppShell>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Meu Perfil</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gerencie suas informações pessoais e altere sua senha
-          </p>
-        </div>
+    <MemberShell title="Meu Perfil">
+      <div>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          Gerencie suas informações pessoais e altere sua senha
+        </p>
 
         <Tabs defaultValue="personal" className="mb-10">
           <TabsList className="mb-4">
@@ -330,6 +325,6 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppShell>
+    </MemberShell>
   );
 }
