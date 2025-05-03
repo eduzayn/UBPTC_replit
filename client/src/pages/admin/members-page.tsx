@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, UserPlus, Edit, Trash2, UserCheck, UserX, CreditCard } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -34,6 +34,7 @@ export default function AdminMembersPage() {
   
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/users"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 

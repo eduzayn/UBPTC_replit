@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,12 +23,14 @@ export default function AdminFinancePage() {
   // Consulta para obter pagamentos
   const { data: payments = [], isLoading: isLoadingPayments } = useQuery({
     queryKey: ["/api/payments"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
   // Consulta para obter usuários
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ["/api/users"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
