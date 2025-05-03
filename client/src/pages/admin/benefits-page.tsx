@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,7 @@ export default function AdminBenefitsPage() {
   // Consulta para obter benefícios
   const { data: benefits = [], isLoading } = useQuery({
     queryKey: ["/api/benefits"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
