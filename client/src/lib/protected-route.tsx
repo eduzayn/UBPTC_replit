@@ -4,6 +4,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Redirect, Route, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { getPaymentLink } from "@/lib/asaas";
+import { MemberShell } from "@/components/member/member-shell";
 
 export function ProtectedRoute({
   path,
@@ -58,8 +59,7 @@ export function ProtectedRoute({
   const isAdmin = user?.role === "admin";
   const needsToRenew = !isCheckingPayment && user && !isPaymentValid && !isAdmin;
 
-  // Renderizamos diretamente o componente, sem cabeçalho e rodapé
-  // AppShell dentro do componente vai lidar com o layout
+  // Renderizamos o componente dentro do MemberShell
   return (
     <Route path={path}>
       {isLoading || isCheckingPayment ? (
@@ -69,9 +69,7 @@ export function ProtectedRoute({
       ) : needsToRenew ? (
         <Redirect to="/payment-required" />
       ) : (
-        <div className="min-h-screen">
-          <Component />
-        </div>
+        <Component />
       )}
     </Route>
   );

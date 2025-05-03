@@ -20,7 +20,7 @@ import {
   BellRing,
   BookOpen
 } from "lucide-react";
-import { AppShell } from "../components/ui/app-shell";
+import { MemberShell } from "../components/member/member-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DashboardPage() {
@@ -65,14 +65,11 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <AppShell>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Bem-vindo, {user.name}</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Acesse os recursos exclusivos da UBPCT e acompanhe suas atividades
-          </p>
-        </div>
+    <MemberShell title={`Bem-vindo, ${user.name}`}>
+      <div>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          Acesse os recursos exclusivos da UBPCT e acompanhe suas atividades
+        </p>
         
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -376,8 +373,10 @@ export default function DashboardPage() {
                         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                       </CardHeader>
                       <CardContent>
-                        <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -385,53 +384,74 @@ export default function DashboardPage() {
               ) : upcomingEvents && upcomingEvents.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {upcomingEvents.map((event) => (
-                    <Card key={event.id}>
-                      <CardHeader className="pb-2">
-                        <Badge className="w-fit bg-primary mb-2">{event.type}</Badge>
-                        <CardTitle className="text-base">{event.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-2">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {event.date}
-                        </div>
-                        <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm">
-                          <Clock className="h-4 w-4 mr-2" />
-                          {event.time}
-                        </div>
-                        <Link href={`/events/${event.id}`}>
-                          <Button variant="link" className="p-0 h-auto mt-3 text-primary">
-                            Ver detalhes
-                          </Button>
-                        </Link>
-                      </CardContent>
-                    </Card>
+                    <Link key={event.id} href={`/events/${event.id}`}>
+                      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <Badge className="mb-2">{new Date(event.date).toLocaleDateString("pt-BR")}</Badge>
+                            {event.certificate_available && (
+                              <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                                Certificado
+                              </Badge>
+                            )}
+                          </div>
+                          <CardTitle className="text-lg">{event.title}</CardTitle>
+                          <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>
+                              {new Date(event.date).toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {event.description}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               ) : (
                 <Card>
-                  <CardContent className="p-6">
-                    <p className="text-center text-gray-600 dark:text-gray-400">
-                      Não há eventos programados para os próximos dias.
-                    </p>
+                  <CardContent className="p-6 text-center">
+                    <div className="flex flex-col items-center py-6">
+                      <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Nenhum evento programado</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Não há eventos programados para os próximos dias.
+                      </p>
+                      <Link href="/events">
+                        <Button className="bg-primary">Ver todos os eventos</Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               )}
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Minhas Inscrições</h2>
-              </div>
-              
-              <Card>
-                <CardContent className="p-6">
+
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">Por que participar dos eventos?</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">
+                    Os eventos da UBPCT são oportunidades para expandir seu conhecimento, 
+                    participar de discussões de casos clínicos e supervisões em grupo.
+                    {paymentStatus?.status === "adimplente" ? 
+                      " Como associado adimplente, você tem acesso prioritário a todos os eventos." :
+                      " Regularize sua associação para ter acesso prioritário."}
+                  </p>
+                </CardContent>
+                <CardFooter>
                   <Link href="/events">
                     <Button className="bg-primary">
                       Gerenciar minhas inscrições
                     </Button>
                   </Link>
-                </CardContent>
+                </CardFooter>
               </Card>
             </div>
           </TabsContent>
@@ -458,73 +478,81 @@ export default function DashboardPage() {
                         <p className="font-semibold">Status: Progresso Ativo</p>
                       </div>
                       
-                      <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Continue mantendo sua assinatura em dia para receber seu certificado após 12 meses.
-                        {user.graduated 
-                          ? " Por ser graduado, você receberá um Certificado de Pós-Graduação em parceria com a Faculdade Dynamus." 
-                          : " Você receberá um Certificado de Formação Livre em Psicanálise Clínica e Terapêutica."}
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Você está em dia com sua assinatura e seu progresso para certificação anual está sendo registrado.
+                        {certificates && certificates.length > 0 ? 
+                          ` Você possui ${certificates.length} certificado(s) emitido(s).` : 
+                          " Você ainda não possui certificados emitidos."}
                       </p>
                       
-                      {certificates && certificates.length > 0 ? (
-                        <div>
-                          <h3 className="font-semibold mb-2">Seus Certificados:</h3>
-                          <ul className="space-y-2">
-                            {certificates.map((cert) => (
-                              <li key={cert.id} className="flex items-center gap-2">
-                                <Award className="h-5 w-5 text-primary" />
-                                <span>{cert.type === "formacao_livre" 
-                                  ? "Certificado de Formação Livre" 
-                                  : cert.type === "pos_graduacao" 
-                                    ? "Certificado de Pós-Graduação" 
-                                    : "Certificado de Evento"}</span>
-                                <span className="text-gray-500 dark:text-gray-400">(Emitido em {cert.issueDate})</span>
-                                <Link href={`/certificates/${cert.id}/download`}>
-                                  <Button variant="link" className="text-primary p-0 h-auto">Download</Button>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600 dark:text-gray-400 italic">
-                          Você ainda não tem certificados emitidos. Continue participando dos eventos e mantenha
-                          sua assinatura ativa para receber seu certificado anual.
-                        </p>
-                      )}
+                      <Link href="/certificates">
+                        <Button className="bg-primary">Ver meus certificados</Button>
+                      </Link>
                     </div>
                   ) : (
-                    <div className="flex items-start">
-                      <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-red-700 dark:text-red-400 mb-1">Status: Progresso Pausado</p>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          Sua assinatura está inadimplente, o que pausou seu progresso para certificação. 
-                          Regularize seu pagamento para continuar acumulando tempo para o certificado anual.
-                        </p>
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                        <p className="font-semibold">Status: Progresso Pausado</p>
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Sua assinatura está inadimplente. Para continuar acumulando horas para sua certificação anual, 
+                        é necessário regularizar seu pagamento.
+                      </p>
+                      
+                      <div className="flex gap-2">
+                        <Link href="/certificates">
+                          <Button variant="outline">Ver meus certificados</Button>
+                        </Link>
                         <Link href="/payment-required">
-                          <Button className="mt-4 bg-primary">Regularizar Pagamento</Button>
+                          <Button className="bg-primary">Regularizar assinatura</Button>
                         </Link>
                       </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Certificados de Eventos</h2>
-              </div>
               
-              <Card>
-                <CardContent className="p-6">
-                  <Link href="/certificates">
-                    <Button className="bg-primary">
-                      Ver todos os certificados
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              {certificates && certificates.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3">Certificados Recentes</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {certificates.slice(0, 2).map((cert) => (
+                      <Card key={cert.id}>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">{cert.title}</CardTitle>
+                          <p className="text-xs text-muted-foreground">
+                            Emitido em {new Date(cert.issuedAt).toLocaleDateString("pt-BR")}
+                          </p>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm">{cert.description}</p>
+                        </CardContent>
+                        <CardFooter className="border-t pt-3 flex justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Carga horária: {cert.hours}h
+                          </p>
+                          <Link href={`/certificates/${cert.id}`}>
+                            <Button variant="outline" size="sm">
+                              <FileText className="h-4 w-4 mr-1" />
+                              Visualizar
+                            </Button>
+                          </Link>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-center">
+                    <Link href="/certificates">
+                      <Button variant="outline">
+                        Ver todos os certificados
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
           
@@ -532,206 +560,141 @@ export default function DashboardPage() {
           <TabsContent value="finance">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Histórico de Pagamentos</h2>
-                <Link href="/payments">
-                  <Button variant="ghost" className="text-primary hover:text-primary/80">
-                    Ver todos
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </Link>
+                <h2 className="text-xl font-bold">Histórico Financeiro</h2>
               </div>
               
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Últimos Pagamentos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingPayments ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-center justify-between animate-pulse">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+              {isLoadingPayments ? (
+                <div className="animate-pulse space-y-4">
+                  <Card className="mb-4">
+                    <CardHeader className="pb-2">
+                      <div className="h-5 bg-gray-200 rounded w-1/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : recentPayments && recentPayments.length > 0 ? (
+                <div>
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Pagamentos Recentes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {recentPayments.slice(0, 3).map((payment) => (
+                          <div key={payment.id} className="flex justify-between items-center pb-2 border-b">
                             <div>
-                              <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-                              <div className="h-3 bg-gray-200 rounded w-24"></div>
-                            </div>
-                          </div>
-                          <div className="h-4 bg-gray-200 rounded w-16"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : recentPayments && recentPayments.length > 0 ? (
-                    <div className="space-y-4">
-                      {recentPayments.slice(0, 5).map((payment) => (
-                        <div key={payment.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${
-                              payment.status === "pago" 
-                                ? "bg-green-100 text-green-700" 
-                                : payment.status === "pendente"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                            }`}>
-                              <PaymentIcon className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <p className="font-medium">
-                                {payment.tipoPagamento === "mensal" 
-                                  ? "Mensalidade" 
-                                  : payment.tipoPagamento === "anual"
-                                    ? "Anuidade"
-                                    : "Pagamento"}
-                              </p>
+                              <p className="font-medium">{payment.description}</p>
                               <p className="text-xs text-muted-foreground">
-                                {new Date(payment.dataPagamento).toLocaleDateString("pt-BR")}
+                                {new Date(payment.payment_date).toLocaleDateString("pt-BR")}
                               </p>
                             </div>
+                            <div className="text-right">
+                              <p className="font-bold">R$ {payment.amount.toFixed(2)}</p>
+                              <Badge 
+                                className={
+                                  payment.status === "pago" ? 
+                                  "bg-green-500" : 
+                                  payment.status === "pendente" ? 
+                                  "bg-orange-500" : 
+                                  "bg-red-500"
+                                }
+                              >
+                                {payment.status === "pago" ? "Pago" : 
+                                 payment.status === "pendente" ? "Pendente" : "Cancelado"}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">
-                              R$ {parseFloat(payment.valor).toFixed(2).replace(".", ",")}
-                            </p>
-                            <Badge className={
-                              payment.status === "pago" 
-                                ? "bg-green-500" 
-                                : payment.status === "pendente"
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                            }>
-                              {payment.status === "pago" 
-                                ? "Pago" 
-                                : payment.status === "pendente"
-                                  ? "Pendente"
-                                  : "Cancelado"}
-                            </Badge>
-                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="border-t pt-4">
+                      <Link href="/payments">
+                        <Button variant="outline">
+                          Ver histórico completo
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </Link>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Informações da Assinatura</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <p className="text-muted-foreground">Plano:</p>
+                          <p className="font-medium">{user.plan === "monthly" ? "Mensal" : "Anual"}</p>
                         </div>
-                      ))}
+                        <div className="flex justify-between">
+                          <p className="text-muted-foreground">Status:</p>
+                          <Badge 
+                            className={paymentStatus?.status === "adimplente" ? "bg-green-500" : "bg-red-500"}
+                          >
+                            {paymentStatus?.status === "adimplente" ? "Adimplente" : "Inadimplente"}
+                          </Badge>
+                        </div>
+                        {paymentStatus?.expiryDate && (
+                          <div className="flex justify-between">
+                            <p className="text-muted-foreground">Próximo vencimento:</p>
+                            <p className="font-medium">{new Date(paymentStatus.expiryDate).toLocaleDateString("pt-BR")}</p>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <p className="text-muted-foreground">Valor:</p>
+                          <p className="font-medium">
+                            {user.plan === "monthly" ? "R$ 69,90/mês" : "R$ 699,00/ano"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="border-t pt-4">
+                      <div className="w-full flex flex-col sm:flex-row gap-2 justify-between">
+                        <Link href="/payments/methods">
+                          <Button variant="outline">
+                            Formas de pagamento
+                          </Button>
+                        </Link>
+                        {paymentStatus?.status !== "adimplente" && (
+                          <Link href="/payment-required">
+                            <Button className="bg-primary">
+                              Regularizar pagamento
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <div className="flex flex-col items-center py-6">
+                      <PaymentIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Nenhum histórico disponível</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Não há registros de pagamentos em seu histórico.
+                      </p>
+                      <Link href="/payment-required">
+                        <Button className="bg-primary">
+                          Gerenciar Pagamentos
+                        </Button>
+                      </Link>
                     </div>
-                  ) : (
-                    <p className="text-center text-gray-600 dark:text-gray-400 py-4">
-                      Nenhum pagamento registrado.
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="pt-0">
-                  {paymentStatus?.status !== "adimplente" && (
-                    <Link href="/payment-required" className="w-full">
-                      <Button className="bg-primary w-full">Regularizar Pagamento</Button>
-                    </Link>
-                  )}
-                </CardFooter>
-              </Card>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Planos</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-green-200">
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      <span>Plano Mensal</span>
-                      <Badge variant="outline" className="ml-2">R$ 69,90/mês</Badge>
-                    </CardTitle>
-                    <CardDescription>
-                      Assinatura renovada mensalmente
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Acesso a todos os recursos da plataforma</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Credencial digital</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Eventos e supervições</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Biblioteca de e-books</span>
-                      </li>
-                    </ul>
                   </CardContent>
                 </Card>
-                
-                <Card className="border-green-200">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle>Plano Anual</CardTitle>
-                      <Badge variant="outline" className="ml-2">R$ 699,00/ano</Badge>
-                    </div>
-                    <CardDescription>
-                      Economia de 20% em relação ao plano mensal
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Todos os benefícios do plano mensal</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Economia de R$ 139,80 por ano</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Pagamento único anual</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-sm">Maior facilidade para obtenção do certificado anual</span>
-                      </li>
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
-        
-        {/* Benefits */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Convênios e Benefícios</h2>
-            <Link href="/benefits">
-              <Button variant="ghost" className="text-primary hover:text-primary/80">
-                Ver todos
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center mb-4">
-                <Handshake className="h-6 w-6 text-primary mr-3" />
-                <h3 className="font-semibold text-lg">Benefícios Exclusivos para Associados</h3>
-              </div>
-              
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Como associado da UBPCT, você tem acesso a diversos descontos e benefícios em 
-                consultas médicas, medicamentos e serviços.
-              </p>
-              
-              <Link href="/benefits">
-                <Button className="bg-primary">
-                  Acessar Benefícios
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-    </AppShell>
+    </MemberShell>
   );
 }
