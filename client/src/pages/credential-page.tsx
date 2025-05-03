@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import { AppShell } from "../components/ui/app-shell";
+import { MemberShell } from "../components/member/member-shell";
 import {
   Card,
   CardContent,
@@ -90,14 +90,11 @@ export default function CredentialPage() {
   if (!user) return null;
 
   return (
-    <AppShell>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Minha Credencial Digital</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Sua identificação profissional como associado da UBPCT
-          </p>
-        </div>
+    <MemberShell title="Minha Credencial Digital">
+      <div>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          Sua identificação profissional como associado da UBPCT
+        </p>
 
         {isLoading ? (
           <Card>
@@ -298,6 +295,6 @@ export default function CredentialPage() {
           </Alert>
         )}
       </div>
-    </AppShell>
+    </MemberShell>
   );
 }
