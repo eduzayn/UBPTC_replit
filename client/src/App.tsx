@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AdminRoute } from "./lib/admin-route";
 
@@ -40,14 +40,20 @@ import NotFound from "./pages/not-found";
 function Router() {
   return (
     <Switch>
-      {/* Admin Routes - Sem header e footer */}
-      <AdminRoute path="/admin" component={AdminDashboardPage} />
-      <AdminRoute path="/admin/members" component={AdminMembersPage} />
-      <AdminRoute path="/admin/ebooks" component={AdminEbooksPage} />
-      <AdminRoute path="/admin/events" component={AdminEventsPage} />
-      <AdminRoute path="/admin/finance" component={AdminFinancePage} />
-      <AdminRoute path="/admin/benefits" component={AdminBenefitsPage} />
-      <AdminRoute path="/admin/communication" component={AdminCommunicationPage} />
+      {/* Admin Routes - Sem header e footer 
+         Estas rotas são gerenciadas pelo AdminShell para consistência do layout administrativo */}
+      <Route path="/admin">
+        <AdminRoute path="/admin" component={AdminDashboardPage} />
+        <AdminRoute path="/admin/members" component={AdminMembersPage} />
+        <AdminRoute path="/admin/ebooks" component={AdminEbooksPage} />
+        <AdminRoute path="/admin/events" component={AdminEventsPage} />
+        <AdminRoute path="/admin/finance" component={AdminFinancePage} />
+        <AdminRoute path="/admin/benefits" component={AdminBenefitsPage} />
+        <AdminRoute path="/admin/communication" component={AdminCommunicationPage} />
+        <Route>
+          <Redirect to="/admin" />
+        </Route>
+      </Route>
       
       {/* Páginas públicas e protegidas - Com header e footer */}
       <Route>
