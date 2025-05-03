@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { AppShell } from "../components/ui/app-shell";
+import { MemberShell } from "../components/member/member-shell";
 import {
   Card,
   CardContent,
@@ -187,14 +187,11 @@ export default function CertificatesPage() {
   const isActive = paymentStatus?.status === "adimplente";
 
   return (
-    <AppShell>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Meus Certificados</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Acesse e faça download dos seus certificados de eventos e formação
-          </p>
-        </div>
+    <MemberShell title="Meus Certificados">
+      <div>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          Acesse e faça download dos seus certificados de eventos e formação
+        </p>
 
         {/* Annual Certificate Progress */}
         <Card className="mb-8">
@@ -467,6 +464,6 @@ export default function CertificatesPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </MemberShell>
   );
 }

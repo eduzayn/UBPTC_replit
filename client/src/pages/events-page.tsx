@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getQueryFn } from "@/lib/queryClient";
-import { AppShell } from "../components/ui/app-shell";
+import { MemberShell } from "../components/member/member-shell";
 import {
   Card,
   CardContent,
@@ -201,14 +201,11 @@ export default function EventsPage() {
   if (!user) return null;
 
   return (
-    <AppShell>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Eventos e Supervisões</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Inscreva-se e participe de eventos, supervisões e grupos de estudo exclusivos para associados
-          </p>
-        </div>
+    <MemberShell title="Eventos e Supervisões">
+      <div>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          Inscreva-se e participe de eventos, supervisões e grupos de estudo exclusivos para associados
+        </p>
 
         {/* Filter Section */}
         <Card className="mb-8">
@@ -571,6 +568,6 @@ export default function EventsPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </MemberShell>
   );
 }
