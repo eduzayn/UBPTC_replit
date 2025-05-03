@@ -18,29 +18,34 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDate } from "@/lib/utils";
+import { getQueryFn } from "@/lib/queryClient";
 
 export default function AdminDashboardPage() {
   // Dados dos associados
   const { data: members = [], isLoading: isLoadingMembers } = useQuery({
     queryKey: ["/api/users"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
   // Dados dos eventos
   const { data: events = [], isLoading: isLoadingEvents } = useQuery({
     queryKey: ["/api/events"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
   // Dados de pagamentos
   const { data: payments = [], isLoading: isLoadingPayments } = useQuery({
     queryKey: ["/api/payments"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
   // Dados de e-books
   const { data: ebooks = [], isLoading: isLoadingEbooks } = useQuery({
     queryKey: ["/api/ebooks"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 

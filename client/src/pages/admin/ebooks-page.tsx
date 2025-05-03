@@ -28,7 +28,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 // Definir categorias de ebooks comuns
@@ -81,6 +81,7 @@ export default function AdminEbooksPage() {
   // Consulta para obter ebooks
   const { data: ebooks = [], isLoading } = useQuery({
     queryKey: ["/api/ebooks"],
+    queryFn: getQueryFn(),
     retry: false,
   });
 
@@ -155,7 +156,11 @@ export default function AdminEbooksPage() {
 
   // Obter categorias únicas dos ebooks
   const uniqueCategories = Array.isArray(ebooks) 
-    ? [...new Set(ebooks.map((ebook: any) => ebook.category))]
+    ? ebooks
+        .map((ebook: any) => ebook.category)
+        .filter((value: string, index: number, self: string[]) => 
+          self.indexOf(value) === index && value
+        )
     : [];
 
   // Filtrar os ebooks
