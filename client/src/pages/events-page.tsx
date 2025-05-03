@@ -39,7 +39,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 
 // Tipos
 type EventType = "supervisao" | "grupo_estudo" | "palestra" | "workshop";
@@ -81,6 +81,7 @@ export default function EventsPage() {
     error: errorEvents,
   } = useQuery({
     queryKey: ["/api/events/upcoming"],
+    queryFn: getQueryFn(),
     enabled: !!user,
   });
 
@@ -92,6 +93,7 @@ export default function EventsPage() {
     error: errorRegistrations,
   } = useQuery({
     queryKey: ["/api/events/registrations/user"],
+    queryFn: getQueryFn(),
     enabled: !!user,
   });
 

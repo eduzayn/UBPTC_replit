@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 
 interface Ebook {
   id: number;
@@ -37,13 +38,7 @@ function EbookCard({ ebook }: { ebook: Ebook }) {
 export default function EbooksSection() {
   const { data: ebooks, isLoading, error } = useQuery<Ebook[]>({
     queryKey: ['/api/ebooks/featured'],
-    queryFn: async () => {
-      const response = await fetch('/api/ebooks/featured');
-      if (!response.ok) {
-        throw new Error('Failed to fetch ebooks');
-      }
-      return response.json();
-    },
+    queryFn: getQueryFn(),
   });
 
   // Fallback ebooks if API request fails or is loading
