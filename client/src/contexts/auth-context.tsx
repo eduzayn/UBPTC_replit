@@ -65,6 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login realizado com sucesso",
         description: `Bem-vindo(a), ${user.name}!`,
       });
+      // Não é necessário redirecionar aqui, pois o useEffect em auth-page.tsx
+      // já cuidará do redirecionamento quando o user for atualizado
     },
     onError: (error: Error) => {
       toast({
