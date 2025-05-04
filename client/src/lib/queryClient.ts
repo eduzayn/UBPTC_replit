@@ -15,22 +15,41 @@ export const queryClient = new QueryClient({
 
 export function getQueryFn(options: GetQueryFnOptions = {}) {
   return async ({ queryKey }: { queryKey: any }) => {
-    const url = Array.isArray(queryKey) ? queryKey[0] : queryKey;
-    const res = await fetch(url);
-
-    if (res.status === 401) {
-      if (options.on401 === "returnNull") {
-        return null;
-      } else {
-        throw new Error("Unauthorized");
+    try {
+      const url = Array.isArray(queryKey) ? queryKey[0] : queryKey;
+      
+      // Primeiro, tentamos verificar a saúde do servidor
+      const healthCheck = await fetch("/api/health");
+      
+      // Se o servidor não estiver disponível, retornamos um erro claro
+      if (healthCheck.status === 503) {
+        throw new Error("Servidor temporariamente indisponível. Por favor, tente novamente em alguns instantes.");
       }
-    }
+      
+      // Prosseguir com a requisição principal
+      const res = await fetch(url);
 
-    if (!res.ok) {
-      throw new Error(`Error fetching ${url}: ${res.statusText}`);
-    }
+      if (res.status === 401) {
+        if (options.on401 === "returnNull") {
+          return null;
+        } else {
+          throw new Error("Unauthorized");
+        }
+      }
 
-    return res.json();
+      if (res.status === 503) {
+        throw new Error("Servidor temporariamente indisponível. Por favor, tente novamente em alguns instantes.");
+      }
+
+      if (!res.ok) {
+        throw new Error(`Error fetching ${url}: ${res.statusText}`);
+      }
+
+      return res.json();
+    } catch (error) {
+      console.error("Query error:", error);
+      throw error;
+    }
   };
 }
 

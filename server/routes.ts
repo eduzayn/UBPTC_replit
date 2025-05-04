@@ -8,8 +8,20 @@ import { eventService } from "./services/event-service";
 import { paymentService } from "./services/payment-service";
 import { certificateService } from "./services/certificate-service";
 
+import { Request, Response, NextFunction } from "express";
+import { User } from "@shared/schema";
+
+// Extendendo o tipo Request do Express para incluir nosso tipo de usuário
+import { User as UserType } from "@shared/schema";
+
+declare global {
+  namespace Express {
+    interface User extends UserType {}
+  }
+}
+
 // Middleware to check if user is authenticated
-const isAuthenticated = (req: any, res: any, next: any) => {
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     return next();
   }
@@ -17,7 +29,7 @@ const isAuthenticated = (req: any, res: any, next: any) => {
 };
 
 // Middleware to check if user has an active subscription
-const hasActiveSubscription = async (req: any, res: any, next: any) => {
+const hasActiveSubscription = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Não autenticado" });
   }
@@ -35,19 +47,21 @@ const hasActiveSubscription = async (req: any, res: any, next: any) => {
   }
   
   // Skip subscription check for admins
-  if (req.user.role === 'admin') {
+  if (req.user && req.user.role === 'admin') {
     return next();
   }
   
   try {
     // Check if user has active subscription
-    const status = req.user.subscription_status;
-    
-    if (status !== 'active') {
-      return res.status(403).json({ 
-        message: "Pagamento pendente: É necessário regularizar sua assinatura para acessar este recurso.", 
-        code: "INACTIVE_SUBSCRIPTION" 
-      });
+    if (req.user) {
+      const status = req.user.subscription_status;
+      
+      if (status !== 'active') {
+        return res.status(403).json({ 
+          message: "Pagamento pendente: É necessário regularizar sua assinatura para acessar este recurso.", 
+          code: "INACTIVE_SUBSCRIPTION" 
+        });
+      }
     }
     
     next();
@@ -62,20 +76,35 @@ const hasActiveSubscription = async (req: any, res: any, next: any) => {
 };
 
 // Middleware to check if user is admin
-const isAdmin = (req: any, res: any, next: any) => {
-  if (req.isAuthenticated() && req.user.role === "admin") {
+const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated() && req.user && req.user.role === "admin") {
     return next();
   }
   return res.status(403).json({ message: "Acesso não autorizado" });
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Check database connection
+      await storage.getAllUsers();
+      res.json({ status: "ok", message: "Server is running and connected to database" });
+    } catch (error) {
+      console.error("Health check error:", error);
+      res.status(503).json({ status: "error", message: "Database connection failed" });
+    }
+  });
+
   // Set up authentication routes
   setupAuth(app);
 
   // Credentials routes
-  app.get("/api/credentials/my", isAuthenticated, hasActiveSubscription, async (req, res) => {
+  app.get("/api/credentials/my", isAuthenticated, hasActiveSubscription, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
       const credential = await credentialService.getUserCredential(req.user.id);
       res.json(credential);
     } catch (error) {
