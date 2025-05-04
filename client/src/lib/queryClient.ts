@@ -26,14 +26,34 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
         throw new Error("Servidor temporariamente indisponível. Por favor, tente novamente em alguns instantes.");
       }
       
+      // Configurar opções da requisição para garantir que os cookies de sessão sejam enviados
+      const requestOptions: RequestInit = {
+        credentials: 'include', // Isso garante que os cookies sejam enviados com a requisição
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      };
+      
       // Prosseguir com a requisição principal
-      const res = await fetch(url);
+      const res = await fetch(url, requestOptions);
 
       if (res.status === 401) {
+        console.warn(`Acesso não autenticado para ${url}`);
         if (options.on401 === "returnNull") {
           return null;
         } else {
-          throw new Error("Unauthorized");
+          // Se a URL for /api/user, não vamos redirecionar para auth
+          if (url === '/api/user') {
+            return null;
+          }
+          
+          // Redirecionar para página de login
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth')) {
+            console.log('Redirecionando para /auth devido a erro 401');
+            // window.location.href = '/auth';
+          }
+          throw new Error("Usuário não autenticado. Por favor, faça login para continuar.");
         }
       }
 
@@ -42,7 +62,7 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
       }
 
       if (!res.ok) {
-        throw new Error(`Error fetching ${url}: ${res.statusText}`);
+        throw new Error(`Erro ao acessar ${url}: ${res.statusText}`);
       }
 
       return res.json();

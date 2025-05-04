@@ -202,8 +202,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Events routes
-  app.get("/api/events", isAuthenticated, hasActiveSubscription, async (req, res) => {
+  app.get("/api/events", isAuthenticated, hasActiveSubscription, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
       const events = await eventService.getEventsForUser(req.user.id);
       res.json(events);
     } catch (error) {
@@ -229,8 +232,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/register", isAuthenticated, hasActiveSubscription, async (req, res) => {
+  app.post("/api/events/:id/register", isAuthenticated, hasActiveSubscription, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
       const registration = await eventService.registerUserForEvent(req.user.id, parseInt(req.params.id));
       res.status(201).json(registration);
     } catch (error) {
@@ -238,8 +244,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id/certificate", isAuthenticated, hasActiveSubscription, async (req, res) => {
+  app.get("/api/events/:id/certificate", isAuthenticated, hasActiveSubscription, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
       const certificateFile = await eventService.getEventCertificate(req.user.id, parseInt(req.params.id));
       
       res.setHeader("Content-Type", "application/pdf");
@@ -310,8 +319,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments/update-method", isAuthenticated, async (req, res) => {
+  app.post("/api/payments/update-method", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
       const { userId, plan } = req.body;
       if (parseInt(userId.toString()) !== req.user.id && req.user.role !== "admin") {
         return res.status(403).json({ message: "Acesso não autorizado" });
@@ -335,8 +348,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Certificates routes
-  app.get("/api/certificates", isAuthenticated, hasActiveSubscription, async (req, res) => {
+  app.get("/api/certificates", isAuthenticated, hasActiveSubscription, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
       const certificates = await certificateService.getUserCertificates(req.user.id);
       res.json(certificates);
     } catch (error) {
@@ -344,8 +360,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/certificates/:id/download", isAuthenticated, hasActiveSubscription, async (req, res) => {
+  app.get("/api/certificates/:id/download", isAuthenticated, hasActiveSubscription, async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
       const certificateFile = await certificateService.getCertificateFile(parseInt(req.params.id), req.user.id);
       
       res.setHeader("Content-Type", "application/pdf");
